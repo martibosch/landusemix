@@ -1,7 +1,7 @@
 ## Package dependencies
 Recommended to use `conda` as Python environment and package manager
 
-1. Install (choose operating system) *either*:
+1. Install (for your operating system) the **Python 2.7** version of *either*:
     * **Anaconda** (https://www.continuum.io/downloads) if you have 600MB of free disk space and don't mind installing a large distribution of Python Data Analytics packages, *or*
     * **Miniconda** (http://conda.pydata.org/miniconda.html) if you want to install manually the packages
     
