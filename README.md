@@ -8,7 +8,8 @@ Recommended to use `conda` as Python environment and package manager
         * Do NOT install as super user
         * If installing in Linux: select `yes` when asked to prepend the install location to your `PATH` in your bash config (i.e. `~/.bashrc`)
         * To have tab autocompletion in the terminal, do `echo 'eval "$(register-python-argcomplete conda)'" >> ~/.bashrc` (or change `~/.bashrc` for your bash config file)
-        * See http://conda.pydata.org/docs/installation.html for more information about the installation.
+        
+    See http://conda.pydata.org/docs/installation.html for more information about the installation.
 
 2. Use `conda env create -f environment.yml` to replicate the virtual environment **urbansprawl**
 
