@@ -1,0 +1,25 @@
+# temp files
+*~
+*#
+*.pyc
+.#*
+
+# jupyter notebooks related
+indicator_analysis/notebooks/.ipynb_checkpoints/
+urban_analysis/notebooks/.ipynb_checkpoints/
+
+# hdfs store
+urban_analysis/hdfs_store/**
+
+# pdflatex files
+*.pdf
+*.aux
+*.log
+*.out
+
+# bibtex files
+*.bbl
+*.blg
+
+# latex compile scripts
+compile
