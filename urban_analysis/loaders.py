@@ -10,6 +10,8 @@ import osm_loader
 
 # CUSTOM EXCEPTION
 
+# TODO: use global constants in CAPS for the hdfs keys
+
 class NotStoredLocallyException(Exception):
     pass
 
@@ -41,8 +43,8 @@ def _get_local_data(store, hdfs_keys):
         if isinstance(hdfs_keys, string_types):
             return store[hdfs_keys]
 
-        if not isinstance(hdfs_keys, (list, tuple)):
-            raise TypeError("keys must be a str or list/tuple")
+        # if not isinstance(hdfs_keys, (list, tuple)):
+        #     raise TypeError("hdfs_keys must be a str or list/tuple")
 
         # there are several keys
         return tuple(store[hdfs_key] for hdfs_key in hdfs_keys)
@@ -50,11 +52,20 @@ def _get_local_data(store, hdfs_keys):
     except (IOError, KeyError, TypeError), e:
         raise NotStoredLocallyException(e.message + "The keys `{hdfs_keys}` are not stored locally at `{store}`.".format(hdfs_keys=hdfs_keys, store=store))
 
+def _update_local_data(store, df_dict, format='table'):
+    """
+
+    :param store: pandas.HDFStore
+    :param df_dict: dict indexed by hdfs keys and with pandas.DataFrame as values
+    """
+    # surround by try/except?
+    [store.put(hdfs_key, df, format=format) for hdfs_key, df in df_dict.items()]
+    
     
 # QUERY UTILS
 
 def _get_data(store, hdfs_keys, extra_method=None, extra_args=None):
-    """ Get the data, either from the `local` store or remotely through `extra_method`
+    """ Get the data, either from the local `store` or remotely through `extra_method`
 
     :param store: pandas.HDFStore
     :param hdfs_keys: str or list of str with the key(s) used for storage at `store`
@@ -70,7 +81,7 @@ def _get_data(store, hdfs_keys, extra_method=None, extra_args=None):
         assert (extra_method != None and extra_args != None), e.message + "A method and its arguments to obtain the data must then be provided"
         return extra_method(*extra_args)
 
-def _load_data(city_ref, hdfs_keys, extra_method, extra_args):
+def _load_data(store, hdfs_keys, extra_method, extra_args):
     """ Loads the data for `city_ref` and `hdfs_keys` if it is stored locally, or obtains the data and stores it locally.
 
     :param city_ref: str with the name used to locally refer to the file
@@ -81,20 +92,20 @@ def _load_data(city_ref, hdfs_keys, extra_method, extra_args):
     :rtype: pandas.DataFrame or tuple of pandas.DataFrame
 
     """
+    result = _get_data(city_ref, hdfs_keys, extra_method, extra_args)
     with pd.HDFStore(_generate_file_path(city_ref), 'w') as store:
-        result = _get_data(city_ref, hdfs_keys, extra_method, extra_args)
         if isinstance(result, pd.DataFrame): # if _get_data returns pd.DataFrame we know that hdfs_keys[0] is string_types
-            store.put(hdfs_keys[0], result, format='table')
+            _update_local_data(city_ref, {hdfs_keys[0]: result})
         elif isinstance(result, tuple):
             assert len(result) == len(hdfs_keys), "The `extra_arg_method` must return a component for each key in hdfs_keys"
-            for result_df, hdfs_key in zip(result, hdfs_keys):
-                store.put(hdfs_key, result_df, format='table')
+            _update_local_data(city_ref, { hdfs_key : result_df for hdfs_key, result_df in zip(result, hdfs_keys)})
     return result
 
 
 
-### PUBLIC METHODS
+# PUBLIC METHODS
 
+## LOADERS
 def load_graph(city_ref, bbox=None, tags=None):
     """ Loads the graph for `city_ref` if it is stored locally, or queries OSM for the region inside `bbox` and stores the result locally.
 
@@ -143,3 +154,53 @@ def load_kde(city_ref, geo_graph, pois):
 
     """
     return _load_data(city_ref, ['kde'], kde.get_kde_df, [geo_graph, pois])
+
+
+## UPDATERS
+
+# TODO: complete doc
+
+def update_graph(city_ref, geo_graph):
+    """ 
+
+    :param city_ref: str with the name used to locally refer to the file
+    :param geo_graph: 
+
+    """
+    # TODO: get nodes_df and edges_df from geo_graph (i.e. after removing nodes)
+    # with pd.HDFStore(_generate_file_path(city_ref), 'w') as store:
+    #     _update_local_data(store, { 'nodes' : nodes_df, 'edges' : edges_df })
+    pass
+
+# TODO: DRY out the with ... as store: _update_local_data(...)
+
+def update_pois(city_ref, pois_df):
+    """ 
+
+    :param city_ref: str with the name used to locally reference the file
+    :param pois_df: 
+
+    """
+    with pd.HDFStore(_generate_file_path(city_ref), 'w') as store:
+        _update_local_data(store, { 'pois' : pois_df })
+
+
+def update_centrality(city_ref, centrality_df):
+    """ 
+
+    :param city_ref: str with the name used to locally reference the file
+    :param centrality_df: 
+
+    """
+    with pd.HDFStore(_generate_file_path(city_ref), 'w') as store:
+        _update_local_data(store, { 'centrality' : centrality_df })
+
+def update_kde(city_ref, kde_df):
+    """ Loads the categorized `pois` density at the urban nodes of `geo_graph` for `city_ref` if they are stored locally, or determines them
+
+    :param city_ref: str with the name used to locally reference the file
+    :param kde_df: 
+
+    """
+    with pd.HDFStore(_generate_file_path(city_ref), 'w') as store:
+        _update_local_data(store, { 'kde' : kde_df })
