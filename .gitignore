@@ -9,7 +9,7 @@ indicator_analysis/notebooks/.ipynb_checkpoints/
 urban_analysis/notebooks/.ipynb_checkpoints/
 
 # hdfs store
-urban_analysis/hdfs_store/**
+urban_analysis/hdfs_store/*.h5
 
 # pdflatex files
 *.pdf
