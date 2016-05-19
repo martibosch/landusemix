@@ -336,7 +336,8 @@ def pois_from_bbox(bbox):
     for key, values, columns in zip(osm_pois.keys, osm_pois.values, osm_pois.columns):
         try:
             df = _process_pois_df_columns(_nodes_from_bbox(bbox, tags=_generate_osm_tag(key, values)), key, columns)
-            pois = pd.concat([pois, df])
+            if len(df) > 1:
+                pois = pd.concat([pois, df])
         except RuntimeError: # the query result is empty
             pass
     return pois
