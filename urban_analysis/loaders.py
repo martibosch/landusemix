@@ -123,6 +123,29 @@ def load_pois(city_ref, bbox=None):
     """
     return _load_data(city_ref, ['pois'], osm_loader.pois_from_bbox, [bbox])
 
+def load_extracted_osm_pois(shp):
+	""" Loads the extracted points of interest (activities/residential)
+
+	:param shp: Shapefile name containing the points
+	:returns: pois with the columns 'key', 'value', 'lon' (longitude), 'lat' (latitude) [, 'population' (population count)]
+	:rtype: pandas.DataFrame
+	"""
+	import extract_uses.utils as utils
+	# Load residential/activities points
+	shapes,pd_df = utils.read_shp_dbf(shp)
+
+	# Get longitude and latitude
+	lon = [ i.points[0][0] for i in shapes]
+	lat = [ i.points[0][1] for i in shapes]
+	
+	if ('population' in pd_df.columns): # Check if population exists
+		# Convert to pandas DF {value,lon,lat,key,population} with indices=osm_id
+		loader_df = pd.DataFrame({'key':pd_df.key.values , 'lat':lat , 'lon':lon , 'value':pd_df.value.values, 'population':pd_df.population.values}, index=pd_df.osm_id.rename("id"))
+	else: 
+		# Convert to pandas DF {value,lon,lat,key} with indices=osm_id
+		loader_df = pd.DataFrame({'key':pd_df.key.values , 'lat':lat , 'lon':lon , 'value':pd_df.value.values}, index=pd_df.osm_id.rename("id"))	
+	return loader_df
+
 
 def load_centrality(city_ref, geo_graph=None):
     """ Loads the centrality indices for `city_ref` if they are stored locally, or determines them

@@ -10,6 +10,7 @@ dependencies:
 - fontconfig=2.11.1=5
 - freetype=2.5.5=0
 - functools32=3.2.3.2=py27_0
+- geos=3.4.2=0
 - get_terminal_size=1.0.0=py27_0
 - hdf5=1.8.16=0
 - ipykernel=4.3.1=py27_0
@@ -62,6 +63,7 @@ dependencies:
 - scipy=0.17.1=np111py27_0
 - seaborn=0.7.0=py27_0
 - setuptools=20.7.0=py27_0
+- shapely=1.5.13=py27_0
 - shiboken=1.2.1=py27_0
 - simplegeneric=0.8.1=py27_0
 - singledispatch=3.4.0.3=py27_0
