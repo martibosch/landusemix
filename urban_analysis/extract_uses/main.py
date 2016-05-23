@@ -2,6 +2,7 @@ import shutil
 import os
 import parameters
 import gc
+import time
 
 import extract_point_uses
 import extract_poly_uses
@@ -10,9 +11,12 @@ import poly_to_pts
 
 import cut_shapefile
 import population
+import utils
 
 
 def clipFiles(point_shapefile, polygon_shapefile):
+	""" Clip input point and polygon shapefiles
+	"""
 	################################################################
 	# Copy projection file for the extracted shapefiles
 	if not os.path.exists(parameters.fn_prefix):
@@ -20,19 +24,17 @@ def clipFiles(point_shapefile, polygon_shapefile):
 	shutil.copy(parameters.prj_shapefile, parameters.fn_prefix+'sample.prj')
 
 	# Note that "_qnI" will be added to distinguish them
-	print('Clip polygon')
 	cut_shapefile.clip_PolygonFile(polygon_shapefile,parameters.fn_subregions+parameters.fn_poly)
 	gc.collect()
 
-	print('Clip points')
 	cut_shapefile.clip_PointFile(point_shapefile,parameters.fn_subregions+parameters.fn_pts)
 	gc.collect()
 	################################################################
 
 def performExtraction(population_count_file = None):
-	################################################################
-	### Given OSM extracted shapefiles (point,polygon) -> Extract residential/activities points	
-	# For each sub-shapefile: Extract point uses, polygon uses, infer polygon uses, convert all polygons to points	
+	""" Given OSM extracted shapefiles osm2pgsql (point,polygon) -> Extract residential/activities points
+	For each sub-shapefile: Extract point uses, polygon uses, infer polygon uses, convert all polygons to points
+	"""	
 	
 	for i in range(0,parameters.numCuts):
 		print("Iteration:",i)
@@ -60,20 +62,43 @@ def performExtraction(population_count_file = None):
 		poly_to_pts.convert(PolyToPoint_needed)
 		gc.collect()
 
-	# Merge the different cuts into one file
-	
+	# Merge the different cuts into one file	
 	cut_shapefile.mergeDifferentCuts(parameters.fn_prefix,parameters.numCuts,parameters.deleteParts)
-
+	
 	### Merge the categories: Use only points
 	if (parameters.USE_Merge_categories):
 		cut_shapefile.mergeFinalCategories(parameters.fn_prefix,parameters.numCuts,parameters.deleteMergedParts)
+		# Map to final activity categories
+		utils.performKeyCategoryMapping(parameters.fn_activities_final)
 	
 	########
 	if (population_count_file != None):
 		### Process: Perform population down-scaling and distribute to each residential point
 		population.population_downscaling(population_count_file, parameters.fn_residential_final)
-
+		gc.collect()
 	########
+
+	################################################################
+
+################################################################	
+def process(point_shapefile, polygon_shapefile, population_count_file = None):
+	""" Process the point and polygon shapefile extracting its uses
+	"""
+	################################################################
+	# Check if folder exists. In this case, assume it is already processed
+	if (os.path.isdir(parameters.fn_prefix)):
+		print('Folder already exists. Assumption: Already processed, then ignoring...',parameters.fn_prefix)
+		#return
+	################################################################
+	if (parameters.USE_verbose):
+		start_time = time.time()
+	################################################################
+	################################################################
+	# Clip files in parts (reduced memory needs if map is too big, faster polygon infer)
+	clipFiles(point_shapefile, polygon_shapefile)
+
+	# Extract residential/activity uses. Alternatively, estimate the population count for residential points
+	performExtraction(population_count_file)
 
 	# Remove temp folder/files
 	if (os.path.isdir(parameters.fn_subregions)):
@@ -81,36 +106,31 @@ def performExtraction(population_count_file = None):
 	if (os.path.isfile(parameters.fn_prefix+'sample.prj') ):
 		os.remove(parameters.fn_prefix+'sample.prj')
 	################################################################
-
-################################################################	
-def process(point_shapefile, polygon_shapefile, population_count_file = None):
-	'''	
-	parameters.population_count_file must be initialized
-	'''
 	################################################################
-	# Clip files in parts (reduced memory needs if map is too big, faster polygon infer)
-	clipFiles(point_shapefile, polygon_shapefile)
-	# Extract residential/activity uses. Alternatively, estimate the population count for residential points
-	performExtraction(population_count_file)
+	if (parameters.USE_verbose):
+		print("Complete processing: --- %s seconds ---" % (time.time() - start_time))
 	################################################################
-
 ################################################################
 
 def main():
+	""" Main file for the uses extraction from osm2pgsql file
+	1) Clips the file for an easier processing (lower memory usage, more efficient code performance)
+	2) Extract the point uses
+	3) Extract polygon uses, and convert to points (centroid)
+	4) Infer polygon uses (when there is not enough information), and convert to points (centroid)
+	5) Perform a population downscaling for residential points
+	"""
 	################################################################
-	print('Hola: Main')
-	###
 	'''
 	parameters.polygon_shapefile and parameters.point_shapefile must be set
 	If parameters.population_count_file is set, perform the population downscaling
 	'''
 	process(parameters.point_shapefile, parameters.polygon_shapefile, parameters.population_count_file)
 
-	# for i in files:
-	# set parameters. files
-	# 	process()
+	#for f in files:
+	#	Set parameters. files
+	#	process()
 	###
-	print('Chau: Main')
 	################################################################
 
 if __name__ == "__main__":

@@ -6,6 +6,8 @@ import shutil
 import shapely
 from shapely.geometry import Point
 
+import classif_uses
+
 ########################################################################
 """ OSM default fields for points and polygons (osm2pgsql)
 """
@@ -17,11 +19,13 @@ Polyfields = [['osm_id', 'N', 19, 0], ['access', 'C', 11, 0], ['aerialway', 'C',
 reducedFields = [['osm_id', 'N', 19, 0], ['value', 'C', 32, 0], ['key', 'C', 32, 0] ]
 def filterColumns(workingKey, sub_selection):
 	""" Filter the columns and return the rows with the reduced fields format
+	Use as input the working key, which determines the contained value
 	"""
 	filteredColumns_Selection = sub_selection[['osm_id',workingKey]]
 	filteredColumns_Selection = filteredColumns_Selection.rename(columns={workingKey:'value'})
 	filteredColumns_Selection['key'] = np.repeat(workingKey,len(filteredColumns_Selection))
 	return filteredColumns_Selection
+
 ########################################################################
 ### Compatibility with encoding/decoding
 def UnicodeToStr(x):
@@ -101,10 +105,12 @@ def toFile(fileName, shapes, shape_attrs, shapefileType, fields = None):
 		w.record(*(RowLEncoded))
 
 	w.save(fileName)
-	try:
-		shutil.copy(parameters.fn_prefix+'sample.prj',fileName+'.prj')
-	except ValueError:
-		return
+	import os.path
+	if (not(os.path.isfile(fileName+'.prj'))):
+		try:
+			shutil.copy(parameters.fn_prefix+'sample.prj',fileName+'.prj')
+		except ValueError:
+			pass
 #####################
 
 ################################################
@@ -132,6 +138,7 @@ def read_shp(file_shape):
 
 def getBoundingBox(point_shapefile, polygon_shapefile = None , line_shapefile = None):
 	""" Compute bounding box for the input given files
+	return: bbox -> latitude1 , longitude1 , latitude2, longitude2
 	"""
 	# Get the bounding box for the given shapefiles
 	bbox_pts = shapefile.Reader(point_shapefile).bbox
@@ -145,11 +152,20 @@ def getBoundingBox(point_shapefile, polygon_shapefile = None , line_shapefile = 
 		bbox_line = bbox_pts
 		
 	# Get the bounding box for all shapefile: Min of xmin,ymin and Max of xmax,ymax
-	bbox = [ min(bbox_poly[0],bbox_pts[0],bbox_line[0]) , min(bbox_poly[1],bbox_pts[1],bbox_line[1]) , max(bbox_poly[2],bbox_pts[2],bbox_line[2]) , max(bbox_poly[3],bbox_pts[3],bbox_line[3]) ]
-	#bbox = [ min(bbox_poly[1],bbox_pts[1],bbox_line[1]) , min(bbox_poly[0],bbox_pts[0],bbox_line[0]) , max(bbox_poly[3],bbox_pts[3],bbox_line[3]), max(bbox_poly[2],bbox_pts[2],bbox_line[2]) ]
+	#bbox = [ min(bbox_poly[0],bbox_pts[0],bbox_line[0]) , min(bbox_poly[1],bbox_pts[1],bbox_line[1]) , max(bbox_poly[2],bbox_pts[2],bbox_line[2]) , max(bbox_poly[3],bbox_pts[3],bbox_line[3]) ]
+	# Format: latitude1 , longitude1 , latitude2, longitude2
+	bbox = [ min(bbox_poly[1],bbox_pts[1],bbox_line[1]) , min(bbox_poly[0],bbox_pts[0],bbox_line[0]) , max(bbox_poly[3],bbox_pts[3],bbox_line[3]), max(bbox_poly[2],bbox_pts[2],bbox_line[2]) ]
 
 	if (parameters.USE_verbose):
 		print('Bounding box:',bbox)
 	return bbox
+
+def performKeyCategoryMapping(fn_activities):
+	""" Given the file containing all point activities: Map {key,value} to the final key category classification
+	"""
+	### Read data-set
+	shapes , df_attrs = read_shp_dbf(fn_activities)
+	df_attrs = classif_uses.keyCategoryMapping(df_attrs)
+	toFile(fn_activities, shapes, df_attrs, shapefile.POINT, reducedFields)
 
 ################################################

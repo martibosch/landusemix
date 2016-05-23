@@ -43,7 +43,7 @@ def convertPolysToPoints(in_shp_poly_file, out_shp_pts_file):
 	Points_xy = [ Point(Polygon(shp.points).centroid) for shp in polygon_shapes ]
 
 	if (parameters.USE_verbose):
-		print('Dataset; Number of points',out_shp_pts_file,len(Points_atr))
+		print('poly_to_pts. Dataset; Number of points',out_shp_pts_file,len(Points_atr))
 
 	utils.toFile(out_shp_pts_file, Points_xy, df_polygon, shapefile.POINT, utils.reducedFields)
 
@@ -55,16 +55,7 @@ def convertPolysToPoints(in_shp_poly_file, out_shp_pts_file):
 def convert(PolyToPoint_needed):
 	""" Convert from polygons to points (computing centroid) for all input files
 	"""
-	####################################################################################
-	if (parameters.USE_verbose):
-		print('Hola: polygons to points')
-	####################################################################################
-
 	# For each file which needs to be converted to points: Process
 	for i in PolyToPoint_needed:
 		convertPolysToPoints(i, i.replace(parameters.fn_poly, parameters.fn_pts_from_poly))
-
-	####################################################################################
-	if (parameters.USE_verbose):
-		print('Chau: polygons to points')
 	####################################################################################

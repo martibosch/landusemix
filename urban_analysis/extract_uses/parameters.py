@@ -39,19 +39,20 @@ fn_final_clasif = "full_"
 
 ### Intermmediate:
 # Classification
-fn_residential = "residential_"
-fn_activities = "activities_"
-fn_uncertain = "uncertain_"
+fn_residential = "residential"
+fn_activities = "activities"
+fn_uncertain = "uncertain"
+
 # For infer_poly_uses
-fn_inferred = "inferred_"
+fn_inferred = "_inferred"
 
 ### Type of object:
-fn_pts_from_poly = "pts_from_poly"
-fn_poly = "poly"
-fn_pts = "pts"
+fn_pts_from_poly = "_pts_from_poly"
+fn_poly = "_poly"
+fn_pts = "_pts"
 
-fn_residential_final = fn_prefix+fn_final_clasif+fn_residential+fn_pts
-fn_activities_final = fn_prefix+fn_final_clasif+fn_activities+fn_pts
+fn_residential_final = fn_prefix+fn_final_clasif+fn_residential
+fn_activities_final = fn_prefix+fn_final_clasif+fn_activities
 ####################################################################################
 ####################################################################################
 ####################################################################################
@@ -68,6 +69,7 @@ USE_ignoreRowsWithTaggingInformation = True
 # Those inferred polygons which remain uncertain: Classify as residential?
 USE_Assume_Residential_under_uncertainty = True
 # Remove duplicates which are in more than one category (e.g. a shop and an amenity using the same osm_id)
+# Note: Sometimes a point represents more than one valid category: e.g. A big shop containing amenities inside
 USE_dropDuplicates = False
 
 # Merge files representing the different categories into one
@@ -75,7 +77,8 @@ USE_Merge_categories = True
 
 ##########
 # Filter buildings smaller than X squared meters
-filterSmallBuildings = True
+USE_filterSmallResidentialBuildings = True
+USE_filterSmallActivitiesBuildings = False
 squaredMeterThreshold = 12
 ### Parallelization during polygon classification infer
 USE_parallel = True
@@ -85,12 +88,12 @@ sizeChunk = 100
 USE_TestInferFewPolys = False
 ##########################################
 
-# When merging files, delete the cut parts?
+# When merging files, delete the different cut parts?
 deleteParts = True
 # When converting polygons to points, delete polygon file?
 deletePolyToPts = True
 # When merging to final classification, delete the files?
-deleteMergedParts = False
-# Since using quadrants, it is cut in 4 different files
-numCuts = 4
+deleteMergedParts = True
+# Since using quadrants, it is cut in 4 different files. Possibilities = [1,2,4,9,16,25,...]
+numCuts = 9
 ####################################################################################

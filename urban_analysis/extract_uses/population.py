@@ -77,46 +77,36 @@ def pixelToLatLon(geotifAddr,pixelPairs):
 ############################################################################
 
 def pixel2coord(GeoTransform, x, y):
-    """Returns global coordinates from pixel x, y coords"""
+    """ Returns global coordinates from pixel x, y coords
+    """
     xoff, a, b, yoff, d, e = GeoTransform
     xp = a * x + b * y + xoff
     yp = d * x + e * y + yoff
     return(xp, yp)
 
-def coord2pixel(GeoTransform, x, y):
-	"""
-	Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
-	the pixel location of a geospatial coordinate
+def coord2pixel(GeoTransform, lon, lat):
+	""" Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate	the pixel location of a geospatial coordinate
+	Input: GeoTransformation, longitude, latitude
 	"""
 	xoff, a, b, yoff, d, e = GeoTransform
-	ulX = xoff
-	ulY = yoff
-	xDist = a
-	yDist = e
-	rtnX = b
-	rtnY = d
-	pixel = ((x - ulX) / xDist)
-	line = ((ulY - y) / xDist)
+	ulX, ulY = xoff, yoff
+	xDist, yDist = a, e
+	rtnX, rtnY = b, d
+	pixel = ((lat - ulX) / xDist)
+	line = ((ulY - lon) / xDist)
 	return (pixel, line)
 
 ############################################################################
-# Given coordinates, get the sub-matrix corresponding to the region of interest
 def getSubArray(dataset, x1, y1, x2, y2):
+	""" Returns the matrix containing the region of interest (given coordinates) of input data-set
+	"""
 	data = dataset.ReadAsArray().astype(np.float)
 	# Extract selected rows
 	Rows = [ data[row] for row in range(y1,y2+1)]
 	# Extracted, from the selected rows, the selected columns
 	ColsOfRows = [ row[x1:x2+1] for row in Rows]
 	return np.matrix(ColsOfRows)
-def getSubArrayDF(dataset, x1, y1, x2, y2):
-	data = dataset.ReadAsArray().astype(np.float)
-	# Extract selected rows
-	Rows = [ data[row] for row in range(y1,y2+1)]
-	# Extracted, from the selected rows, the selected columns
-	ColsOfRows = [ row[x1:x2+1] for row in Rows]
-	return pd.DataFrame(ColsOfRows)
 
-# Get for each element extracted of the raster map, the bounding box in latitude/longitude which contains it
 def getContaining_LatitudeLongitude(GeoTransform, x0, y0):
 	""" Computes the latitude/longitude bounding box for the given pixel and geo-transform
 	Returns latitude1,longitude1,latitude2,longitude2
@@ -132,13 +122,16 @@ def getContaining_LatitudeLongitude(GeoTransform, x0, y0):
 ############################################################################
 
 def getROI(GeoTransform, point_shapefile, polygon_shapefile = None, line_shapefile = None):
+	""" Get the region of interest (pixels) using the Geotransform, given the input shapefile. 
+	"""
 	# Get Region of interest (x,y coordinates) given the Geotransformation, and the shapefile which contain the points
 	##########################
+	# bbox Format: latitude1 , longitude1 , latitude2, longitude2
 	bbox = utils.getBoundingBox(point_shapefile, polygon_shapefile, line_shapefile)
 
 	# Get the pixel values (floating precision) of the extremes given longitude/latitude
-	Pix1 = coord2pixel(GeoTransform, bbox[1] , bbox[0])
-	Pix2 = coord2pixel(GeoTransform, bbox[3] , bbox[2])
+	Pix1 = coord2pixel(GeoTransform, bbox[0] , bbox[1])
+	Pix2 = coord2pixel(GeoTransform, bbox[2] , bbox[3])
 
 	### Get min and max values, since ReadAsAray will interprete as an image: (0,0) at top left
 	x1 = int( math.floor( min( Pix1[0] , Pix2[0] ) ) )# Round DOWN the minimum value pixel X
@@ -157,10 +150,8 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 	"""
 	####################################################################################
 	if (parameters.USE_verbose):
-		print('Hola: Population down-scaling')
+		print('Population down-scaling')
 	####################################################################################
-
-	################################################################
 	# Open tif file
 	dataset = gdal.Open(population_count_file, GA_ReadOnly)
 	# GDAL affine transform parameters, According to gdal documentation xoff/yoff are image left corner, a/e are pixel width/height and b/d is rotation and is zero if image is north up. 
@@ -169,15 +160,14 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 	# Get the desired region of interest
 	x1, y1, x2, y2 = getROI(GeoTransform, residential_point_shapefile)
 
-	print(x1,y1,x2,y2)
-
 	# Get the ROI of the population count matrix
 	population_np = getSubArray(dataset, x1,y1,x2,y2)
 
 	# Read shapefile and attributes
 	shape_residential_pts, df_residential_pts = utils.read_shp_dbf(residential_point_shapefile)
-	df_residential_pts['population'] = 0
-	#df_residential_popCount_pts = pd.DataFrame({ 'osm_id' : df_residential_pts['osm_id'], 'population': 0 })
+	# Replace with population format: Key=residential, value=population count
+	df_residential_pts['value'] = 0
+	df_residential_pts['key'] = "residential"
 	# Create the points structure
 	s_residential_pts = pd.Series( [Point(shape.points[0]) for shape in shape_residential_pts] )
 	##########################
@@ -207,25 +197,11 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 			homogeneousPopCountDistribution = pop_count / len(within_residential_pts)
 
 			# Set the value
-			df_residential_pts.loc[ within_residential_pts.index ,'population'] = homogeneousPopCountDistribution
+			df_residential_pts.loc[ within_residential_pts.index ,'value'] = homogeneousPopCountDistribution
 
 	if (parameters.USE_verbose):
 		print("--- %s seconds ---" % (time.time() - start_time))
 
-	# Save file adding the population column to the fields
-	reducedFields_population = utils.reducedFields + [ ['population', 'N', 32, 5] ]
-	utils.toFile(parameters.fn_prefix+parameters.fn_final_clasif+parameters.fn_residential+"population", shape_residential_pts, df_residential_pts, shapefile.POINT, reducedFields_population)
-
-	################################################################
-	if (parameters.USE_verbose):
-		print('Chau: Population down-scaling')
+	# Save file
+	utils.toFile(parameters.fn_prefix+parameters.fn_final_clasif+parameters.fn_residential, shape_residential_pts, df_residential_pts, shapefile.POINT, utils.reducedFields)
 	####################################################################################
-
-
-
-if __name__ == "__main__":
-	# stuff only to run when not called via 'import' here
-	population_count_file = parameters.population_count_file
-	residential_point_shapefile = 'grenoble/full_residential_pts'
-
-	population_downscaling(parameters.population_count_file, residential_point_shapefile)

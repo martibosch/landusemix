@@ -107,6 +107,76 @@ def mergeDifferentCuts(folder,numCuts,removeParts):
 #########################################################################################################
 ##########################################################################################
 
+def getTouchingQuadrants(PolygonQuadrants, Polygon):
+	""" Get the different zones where a polygon touches/is contained
+	"""
+	intersectsQuadrants = [ i for i,quad in zip(range(0,len(PolygonQuadrants)),PolygonQuadrants) if quad.intersects(Polygon) ]
+	return intersectsQuadrants
+'''
+# First quadrant which matches
+def getFirstQuadrant(PolygonQuadrants, Polygon):
+	for i in PolygonQuadrants:
+		if (i.intersects(Polygon)):
+			return [i]
+'''
+
+def getCoordsArrQuadrants(bbox, numCuts):
+	import math
+	# Compute the grid size (j which computes j*j=numCuts)
+	gridSize = math.sqrt(numCuts)
+
+	if (not(gridSize.is_integer())):
+		print('Number of cuts should be compatible with format [j*j] with j integer; Possibilities: 1,2,4,9,16,25,...')
+		quit()
+
+	x1,y1,x2,y2 = bbox
+
+	# Generate an Xs and Ys array containing the delimitation values
+	Xs = [x1]
+	Ys = [y1]
+	for i in range(1,int(gridSize)): # First element already added
+		Xi = x1 + i*(x2-x1)/gridSize
+		Yi = y1 + i*(y2-y1)/gridSize
+		Xs.append(Xi)
+		Ys.append(Yi)
+	Xs.append(x2)
+	Ys.append(y2)
+	return Xs,Ys
+
+def getPolygonQuadrants(bbox, numCuts):
+	""" Compute the bounding box coordinates of the different cuts
+	Returns a polygon shape
+	"""
+	Xs,Ys = getCoordsArrQuadrants(bbox,numCuts)
+
+	PolygonQuadrants = []
+	# Generate the polygon quadrants
+	for y_i in range(0,len(Ys) -1 ): # For all Y's values except the last one
+		for x_i in range(0,len(Xs) -1 ): # For all X's values except the last one
+			# Create the box containing X'i,Y'i and X'i+1,Y'i+1
+			box = shapely.geometry.box(Xs[x_i],Ys[y_i],Xs[x_i+1],Ys[y_i+1])
+			PolygonQuadrants.append(box)
+	return PolygonQuadrants
+
+def getBboxArr_Quadrants(bbox, numCuts):
+	""" Compute the bounding box coordinates of the different cuts
+	Returns a bounding box array
+	"""
+	Xs,Ys = getCoordsArrQuadrants(bbox,numCuts)
+	Xs = [ str(x) for x in Xs ]
+	Ys = [ str(y) for y in Ys ]
+
+	BboxArr_Quadrants = []
+	# Generate the polygon quadrants
+	for y_i in range(0,len(Ys) -1 ): # For all Y's values except the last one
+		for x_i in range(0,len(Xs) -1 ): # For all X's values except the last one
+			# Create the box containing X'i,Y'i and X'i+1,Y'i+1
+			boxArr = [ Xs[x_i],Ys[y_i],Xs[x_i+1],Ys[y_i+1] ]
+			BboxArr_Quadrants.append(boxArr)
+	return BboxArr_Quadrants
+
+####################################
+
 def clip_PointFile(in_shp, out_shp):
 	""" Clip a given point file to divide it in several files (easier to process)
 	Divide in four quadrants, using the centre of the bounding box
@@ -118,42 +188,16 @@ def clip_PointFile(in_shp, out_shp):
 	# Create a reader instance for our shapefile
 	r = shapefile.Reader(in_shp)
 
-	# Box selection
-	v_x1,v_y1,v_x2,v_y2 = r.bbox
-	# X,Y values intermediate
-	v_x_i = v_x1 + (v_x2-v_x1)/2.
-	v_y_i = v_y1 + (v_y2-v_y1)/2.
-
-	# Convert to string
-	x1,y1,x2,y2,xi,yi = [str(v_x1),str(v_y1),str(v_x2),str(v_y2),str(v_x_i),str(v_y_i)]
-
 	# Output files
-	f1 = [out_shp+"_q"+str(i)+".shp" for i in range(0,4)]
+	f1 = [out_shp+"_q"+str(i)+".shp" for i in range(0,parameters.numCuts)]
 
-	# Build polygon quadrants
-	p_quadrant1 = [x1,y1,xi,yi]
-	p_quadrant2 = [xi,y1,x2,yi]
-	p_quadrant3 = [x1,yi,xi,y2]
-	p_quadrant4 = [xi,yi,x2,y2]
-	PolygonQuadrants = [p_quadrant1,p_quadrant2,p_quadrant3,p_quadrant4]
+	####################################################################
+	PolygonQuadrants = getBboxArr_Quadrants(r.bbox,parameters.numCuts)
 	
-	for f,quad in zip(f1,PolygonQuadrants):
+	for f,quad in zip(f1,PolygonQuadrants): # Output shapefile, bounding box quadrant
 		callOgr(["ogr2ogr","-overwrite","-f","ESRI Shapefile",f,in_shp,"-clipsrc",quad[0],quad[1],quad[2],quad[3]])
 
 ####################################
-
-def getQuadrants(PolygonQuadrants, Polygon):
-	""" Get the different zones where a polygon touches/is contained
-	"""
-	intersectsQuadrants = [ i for i,quad in zip(range(0,4),PolygonQuadrants) if quad.intersects(Polygon) ]
-	return intersectsQuadrants
-'''
-# First quadrant which matches
-def getFirstQuadrant(PolygonQuadrants, Polygon):
-	for i in PolygonQuadrants:
-		if (i.intersects(Polygon)):
-			return [i]
-'''
 
 def clip_PolygonFile(in_shp, out_shp):
 	""" Clip a given polygon file to divide it in several files (easier to process)
@@ -177,25 +221,8 @@ def clip_PolygonFile(in_shp, out_shp):
 	for i in w_fq:
 		i.fields = r.fields
 
-	# Box selection
-	x1,y1,x2,y2 = r.bbox
-
 	####################################################################
-	'''
-	TODO: If numCuts != 4 -> Automatic generation of sub-regions!!!
-	'''
-	# Intermediate point
-	xi = (x1+x2)/2.
-	yi = (y1+y2)/2.
-
-	# Build polygon quadrants
-	p_quadrant1 = shapely.geometry.box(x1,y1,xi,yi)	
-	p_quadrant2 = shapely.geometry.box(xi,y1,x2,yi)
-	p_quadrant3 = shapely.geometry.box(x1,yi,xi,y2)
-	p_quadrant4 = shapely.geometry.box(xi,yi,x2,y2)
-	PolygonQuadrants = [p_quadrant1,p_quadrant2,p_quadrant3,p_quadrant4]
-	####################################################################
-
+	PolygonQuadrants = getPolygonQuadrants(r.bbox,parameters.numCuts)
 
 	# Iterate through the shapes and attributes at the same time
 	for poly in r.iterShapeRecords():
@@ -205,7 +232,7 @@ def clip_PolygonFile(in_shp, out_shp):
 	    rec = poly.record
 	    
 	    # Get the quadrants which intersect the polygon
-	    quadrant = getQuadrants(PolygonQuadrants, Polygon(geom.points))
+	    quadrant = getTouchingQuadrants(PolygonQuadrants, Polygon(geom.points))
 
 	    # If polygon lies within several quadrants, add it as a special polygon:
 	    if (len(quadrant) > 1):

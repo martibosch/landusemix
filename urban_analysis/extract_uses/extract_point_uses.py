@@ -22,18 +22,13 @@ def main(points_shapefile, suffix_out_shp):
 	Uses the reduced fields: osm_id, key, value
 	"""
 	####################################################################################
-	if (parameters.USE_verbose):
-		print('Hola: extract_point_uses')
-	####################################################################################
-
-	####################################################################################
 	### Read data-set
 	# Point shapefile
 	point_shapes , df_point = utils.read_shp_dbf(points_shapefile)
 	####################################################################################
 
 	if (parameters.USE_verbose):
-		print('Loaded Points:',len(df_point))
+		print('extract_point_uses. Loaded Points:',len(df_point))
 
 	####################################################################################
 
@@ -75,9 +70,5 @@ def main(points_shapefile, suffix_out_shp):
 	if (parameters.USE_verbose):
 		print('Activites points',len(activities_pts))
 		print('Residential points',len(residential_pts))
-
-	if (parameters.USE_verbose):
-		print("Chau: extract_point_uses")
-
 
 ####################################################

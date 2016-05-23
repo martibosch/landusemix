@@ -47,13 +47,9 @@ leisure_activies = ['adult_gaming_centre','amusement_arcade','beach_resort','dan
 '''
 # Activity categories:
 	'shop'
-	'amenity'
-	'commercial/industrial' : industrial, office, ...
-	'leisure' ? -> Or merge it with amenity?
-	'civic' ? -> hospitals, schools, ...
+	'leisure/amenity'
+	'commercial/industrial'
 	-> Pick those values for the keys ['building','landuse','inferred'] and join it to the respective categories
-
-
 
 ######
 	http://wiki.openstreetmap.org/wiki/Key:amenity
@@ -64,6 +60,42 @@ leisure_activies = ['adult_gaming_centre','amusement_arcade','beach_resort','dan
 	-> 'building' = Commercial ?
 	-> 'building' = Civic/Amenity ?
 '''
+
+def keyCategoryMapping(pois_df):
+	####################
+	### Process landuse key
+	# landuse => commercial/industrial
+	pois_df.loc[ (pois_df.key.isin(["landuse"]) )& (pois_df.value.isin(landuse_activities) ) , 'key'] = 'commercial/industrial'
+	# landuse => leisure/amenity
+	pois_df.loc[ (pois_df.key.isin(["landuse"]) )& (pois_df.value.isin(amenities_activities) ),'key'] = 'leisure/amenity'
+	# landuse => shop
+	pois_df.loc[ (pois_df.key.isin(["landuse"]) )& (pois_df.value.isin(['shop']) ),'key'] = 'shop'
+
+	### Merge leisure and amenity
+	# leisure => leisure/amenity
+	pois_df.loc[ pois_df.key.isin(["leisure"]) , 'key'] = 'leisure/amenity'
+	# amenity => leisure/amenity
+	pois_df.loc[ pois_df.key.isin(["amenity"]) , 'key'] = 'leisure/amenity'
+
+	### Process building key
+	# building => leisure/amenity
+	pois_df.loc[ (pois_df.key.isin(["building"]) )& (pois_df.value.isin(amenities_activities) ) ,'key'] = 'leisure/amenity'
+	# building => commercial/industrial
+	pois_df.loc[ (pois_df.key.isin(["building"]) )& (pois_df.value.isin(building_activities) ) ,'key'] = 'commercial/industrial'
+	# building => shop
+	pois_df.loc[ (pois_df.key.isin(["building"]) )& (pois_df.value.isin(['shop']) ),'key'] = 'commercial/industrial'
+
+	### Process inferred
+	# inferred => leisure/amenity
+	pois_df.loc[ (pois_df.key.isin(["inferred"]) )& (pois_df.value.isin(amenities_activities) ),'key'] = 'leisure/amenity'
+	# inferred => commercial/industrial
+	pois_df.loc[ (pois_df.key.isin(["inferred"]) )& (pois_df.value.isin(building_activities) ) ,'key'] = 'commercial/industrial'
+	pois_df.loc[ (pois_df.key.isin(["inferred"]) )& (pois_df.value.isin(landuse_activities) ) ,'key'] = 'commercial/industrial'
+	# inferred => shop
+	pois_df.loc[ (pois_df.key.isin(["inferred"]) )& (pois_df.value.isin(['shop']) ) ,'key'] = 'shop'
+	####################
+	return pois_df
+
 ####################################################################################
 ### Roads:
 highway_important =  ["motor_way" , "trunk" , "primary" , "secondary", "tertiary", "residential", "unclassified", "service"]

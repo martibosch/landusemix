@@ -23,18 +23,13 @@ def main(polygon_shapefile, suffix_out_shp):
 	Uses the reduced fields: osm_id, key, value
 	"""
 	####################################################################################
-	if (parameters.USE_verbose):
-		print('Hola: extract_poly_uses')
-	####################################################################################
-
-	####################################################################################
 	### Read data-set
 	# Polygon shapefile
 	polygon_shapes , df_polygon = utils.read_shp_dbf(polygon_shapefile)
 	####################################################################################
 
 	if (parameters.USE_verbose):
-		print('Loaded Points')
+		print('extract_poly_uses. Loaded Points:',len(df_polygon))
 
 	####################################################################################
 
@@ -80,6 +75,3 @@ def main(polygon_shapefile, suffix_out_shp):
 	if (parameters.USE_verbose):
 		print('Activites polygons',len(activities_poly))
 		print('Residential polygons',len(residential_poly))
-
-	if (parameters.USE_verbose):
-		print("Chau: extract_poly_uses")

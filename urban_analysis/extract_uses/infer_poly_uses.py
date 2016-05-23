@@ -110,14 +110,6 @@ def inferUseGivenContainingPolygons(ToInfer_poly, full_containingPolygons):
 				inferred_poly_residential.append(idx)
 			elif (containingPoly[1]['Classification'] != 'other'): # Any activity tag
 				inferred_poly_activity.append([idx, containingPoly[1]['Classification'] ])
-			''' # Old version: Activity/Residential/Other
-			if (containingPoly[1]['Classification'] == 'activity'):
-				inferred_poly_activity.append(idx)
-			elif (containingPoly[1]['Classification'] == 'residential'):
-				inferred_poly_residential.append(idx)
-			#elif (containingPoly[1]['Classification'] == 'other'): # Other classif
-				# Do nothing. We're almost sure it shouldn't belong to either activity/residential
-			'''
 		else:
 			# If none, it remains uncertain
 			inferred_poly_uncertain.append(idx)
@@ -172,10 +164,11 @@ def filterInferredColumns(sub_selection):
 	""" Filter the inferred columns in the reduced format
 	[osm_id, key:inferred, value:""]
 	"""
-	filteredColumns_Selection = sub_selection[['osm_id']]
+	filteredColumns_Selection = sub_selection[['osm_id']].copy()
 	filteredColumns_Selection['value'] = np.repeat('',len(filteredColumns_Selection))
 	filteredColumns_Selection['key'] = np.repeat('inferred',len(filteredColumns_Selection))
 	return filteredColumns_Selection
+
 def filterInferredActivityColumns(df_polygon, inferred_poly_activity):
 	""" Filter the inferred activity columns in the reduced format
 	df_polygon: dataframe attributes of the polygons
@@ -194,9 +187,6 @@ def filterInferredActivityColumns(df_polygon, inferred_poly_activity):
 ##############################
 ################################################################################################
 
-# Polygon shapefile ; Polygon shapefile whose polygons lie within at least two quadrants
-# Polygons to infer: From polygon_shapefile. Polygon needs to be classified once only
-# poly_shp_several_quadrants: Help to infer, since they might give valuable information
 def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 	"""Given the polygon shapefile, it infers the residential/activity category they belong to
 	If not enough information exists: Check the landuse non-null of the polygon where it is contained that is smallest in size
@@ -206,10 +196,6 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 	if (not (parameters.USE_infer_polyBuildings) ):
 		print('Not inferring polygons')
 		return
-
-	################ 
-	if (parameters.USE_verbose):
-		print('Hola: Inferring polygon (building) uses')
 
 	################################################
 	### Read data-set
@@ -236,8 +222,7 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 	################
 	
 	if (parameters.USE_verbose):
-		print("Polygons LU Region ; Polygons to infer")
-		print(len(df_Polygons_LU_Region),len(ToInfer_poly))
+		print("infer_poly_uses. Polygons with Landuse Region:", len(df_Polygons_LU_Region), "Polygons to infer", len(ToInfer_poly))
 
 	################ 
 
@@ -249,10 +234,13 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 	inferred_poly_activity, inferred_poly_residential , inferred_poly_uncertain = inferUseGivenContainingPolygons(ToInfer_poly, full_containingPolygons)
 
 	# Filter buildings small enough?
-	if (parameters.filterSmallBuildings):
+	if (parameters.USE_filterSmallResidentialBuildings):
 		# Filter residential and uncertain polygons smaller than X m2
 		inferred_poly_residential = filterSmallBuildings(inferred_poly_residential, polygon_shapes, parameters.squaredMeterThreshold)
 		inferred_poly_uncertain = filterSmallBuildings(inferred_poly_uncertain, polygon_shapes, parameters.squaredMeterThreshold)
+	if (parameters.USE_filterSmallActivitiesBuildings):
+		# Filter activities polygons smaller than X m2
+		inferred_poly_activity = filterSmallBuildings(inferred_poly_activity, polygon_shapes, parameters.squaredMeterThreshold)
 
 	################################################################
 	if (parameters.USE_verbose):
@@ -261,6 +249,7 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 		print('Inferred Uncertain polygons',len(inferred_poly_uncertain))
 
 	#########################
+	
 	# Filter the important columns for uncertain/residential purposes: [osm_id, key="inferred", value=""]
 	fc_inferred_poly_uncertain = filterInferredColumns(df_polygon.iloc[inferred_poly_uncertain])
 	fc_inferred_poly_residential = filterInferredColumns(df_polygon.iloc[inferred_poly_residential])
@@ -273,6 +262,4 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 	utils.toFile(parameters.fn_prefix+parameters.fn_activities+parameters.fn_inferred+parameters.fn_poly+suffix_out_shp, polygon_shapes, fc_inferred_poly_activity, shapefile.POLYGON, utils.reducedFields )
 	utils.toFile(parameters.fn_prefix+parameters.fn_residential+parameters.fn_inferred+parameters.fn_poly+suffix_out_shp, polygon_shapes, fc_inferred_poly_residential, shapefile.POLYGON, utils.reducedFields )
 
-	if (parameters.USE_verbose):
-		print('Chau: Inferring polygon uses')
 	########################################################################################################################
