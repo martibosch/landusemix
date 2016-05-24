@@ -31,6 +31,8 @@ def pois_scatter(pois_df, by=['key'], base_figsize=8, scatter_kws=None, line_kws
     category_gb = pois_df.groupby(by=by)
     n_categories = len(category_gb)
     fig, axes = plt.subplots(nrows=n_categories, ncols=1, sharey=True, sharex=True, figsize=(base_figsize, base_figsize*n_categories))
+    if n_categories == 1: # Must be iterable
+       axes = [axes]
     for (label, df), ax in zip(category_gb, axes):
         _category_scatter(df['lon'], df['lat'], label=label, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
     # return ax
@@ -48,7 +50,7 @@ def pois_scatter_kde(pois_df, kde_df, by=['key'], base_figsize=8, scatter_kws=No
     """
     category_gb = pois_df.groupby(by=by)
     n_categories = len(category_gb)
-    fig, axes = plt.subplots(nrows=n_categories, ncols=2, sharey=True, sharex=True, figsize=(base_figsize*2, base_figsize*n_categories))
+    fig, axes = plt.subplots(nrows=n_categories, ncols=2, sharey=True, sharex=True, figsize=(base_figsize*2, base_figsize*n_categories), squeeze=False)
     for (label, df), ax_row in zip(category_gb, axes):
         _category_scatter(df['lon'], df['lat'], label=label, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax_row[0])
         ax_kde = ax_row[1]
