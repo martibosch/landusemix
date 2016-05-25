@@ -88,7 +88,7 @@ def process(point_shapefile, polygon_shapefile, population_count_file = None):
 	# Check if folder exists. In this case, assume it is already processed
 	if (os.path.isdir(parameters.fn_prefix)):
 		print('Folder already exists. Assumption: Already processed, then ignoring...',parameters.fn_prefix)
-		#return
+		return
 	################################################################
 	if (parameters.USE_verbose):
 		start_time = time.time()

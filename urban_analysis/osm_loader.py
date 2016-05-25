@@ -225,10 +225,13 @@ def _node_pairs(nodes, ways, waynodes, two_way=True):
     intersections = _intersection_nodes(waynodes)
     waymap = waynodes.groupby(level=0, sort=False)
     pairs = []
-
+    
     for id, row in ways.iterrows():
         nodes_in_way = waymap.get_group(id).node_id.values
         nodes_in_way = filter(lambda x: x in intersections, nodes_in_way)
+        
+        # row.highway contains the highway type which connects the potential nodes (from_node, to_node)
+        highwayWeight = osm_roads.getHighwayWeight(row.highway)
 
         if len(nodes_in_way) < 2:
             # no nodes to connect in this way
@@ -237,13 +240,16 @@ def _node_pairs(nodes, ways, waynodes, two_way=True):
         for from_node, to_node in pairwise(nodes_in_way):
             fn = nodes.loc[from_node]
             tn = nodes.loc[to_node]
-
+            
             distance = _great_circle_dist(fn.lat, fn.lon, tn.lat, tn.lon)
+            #distance_weighted = distance * highwayWeight
+            distance = distance * highwayWeight
 
             pairs.append({
                 'from_id': from_node,
                 'to_id': to_node,
                 'distance': distance
+                #'cost': distance_weighted
             })
 
             if not two_way:
@@ -251,6 +257,7 @@ def _node_pairs(nodes, ways, waynodes, two_way=True):
                     'from_id': to_node,
                     'to_id': from_node,
                     'distance': distance
+                    #'cost': distance_weighted
                 })
 
     pairs = pd.DataFrame.from_records(pairs)
@@ -295,17 +302,15 @@ def _process_pois_df_columns(df, key, columns):
     return df
 
 
-# PUBLIC METHODS
+
 ## ROAD GRAPH
 def graph_from_bbox(bbox, tags=None, two_way=True):
     """ Get road nodes and edges from a bounding lat/lon box.
-
     :param bbox: list of float of the form [lat_min, lon_min, lat_max, lon_max]
     :param tags: list or str with a tag request according to the Overpass QL (see http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide)
     :param two_way: bool whether the routes are two-way. If True, node pairs will only occur once.
     :returns: nodes_df, edges_df : pandas.DataFrame
     :rtype: tuple
-
     """
     if not tags:
         tags = _generate_osm_tag(osm_roads.key, osm_roads.values)

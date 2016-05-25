@@ -80,7 +80,7 @@ def _load_data(city_ref, hdfs_keys, extra_method=None, extra_args=None):
         with pd.HDFStore(_generate_file_path(city_ref), 'r') as store:
             result = _get_local_data(store, hdfs_keys)
             print("Found %s stored locally" % str(hdfs_keys))
-    except NotStoredLocallyException, e:
+    except (NotStoredLocallyException, IOError) as e:
         assert (extra_method != None), e.message + "A method and its arguments to obtain the data must then be provided"
         print("`%s` is/are not stored locally. Determining it/them through `%s` method" % (str(hdfs_keys), extra_method.__name__))
         result = extra_method(*extra_args)
@@ -137,13 +137,9 @@ def load_extracted_osm_pois(shp):
 	# Get longitude and latitude
 	lon = [ i.points[0][0] for i in shapes]
 	lat = [ i.points[0][1] for i in shapes]
-	
-	if ('population' in pd_df.columns): # Check if population exists
-		# Convert to pandas DF {value,lon,lat,key,population} with indices=osm_id
-		loader_df = pd.DataFrame({'key':pd_df.key.values , 'lat':lat , 'lon':lon , 'value':pd_df.value.values, 'population':pd_df.population.values}, index=pd_df.osm_id.rename("id"))
-	else: 
-		# Convert to pandas DF {value,lon,lat,key} with indices=osm_id
-		loader_df = pd.DataFrame({'key':pd_df.key.values , 'lat':lat , 'lon':lon , 'value':pd_df.value.values}, index=pd_df.osm_id.rename("id"))	
+
+	# Convert to pandas DF {value,lon,lat,key} with indices=osm_id
+	loader_df = pd.DataFrame({'key':pd_df.key.values , 'lat':lat , 'lon':lon , 'value':pd_df.value.values}, index=pd_df.osm_id.rename("id"))	
 	return loader_df
 
 

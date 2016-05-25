@@ -15,7 +15,7 @@ def _from_dfs(nodes_df, edges_df, clean=True):
     """
     get_node = nodes_df.ix
     digraph_df = DataFrame([
-        [edge_row[1]['distance'],
+        [edge_row[1]['distance'], # use 'cost'
          GeoNode(get_node[edge_row[0][0]]),
          GeoNode(get_node[edge_row[0][1]])]
         for edge_row in edges_df.iterrows()], columns=['dist', 'from', 'to'])
