@@ -1,4 +1,4 @@
-import os  # from os.path import dirname, isfile, join
+from os.path import dirname, join, exists
 from six import string_types
 
 import pandas as pd
@@ -6,15 +6,15 @@ import pandas as pd
 from geo_graph import GeoGraph
 import kde
 import osm_loader
-import extract_uses.utils as eu_utils
+import shp_loader
 
 # CONSTANTS FOR THE STORAGE-RELATED DEFINITIONS
-BASE_DIR = os.dirname(__file__)
+BASE_DIR = join(dirname(__file__), 'hdfs_store')
 
 GRAPH_KEYS = ['nodes', 'edges']
 GRAPH_CENTRALITY_KEYS = ['graph_centrality']
 OSM_POIS_KEYS = ['osm_pois']
-OSM_EXTRACTED_POIS_KEYS = ['activities', 'residential']
+# OSM_EXTRACTED_POIS_KEYS = ['activities', 'residential']
 POIS_KEYS = ['pois']
 GRAPH_KDE_KEYS = ['graph_kde']
 GRID_KDE_KEYS = ['activities', 'residential', 'total']
@@ -28,24 +28,14 @@ class NotStoredLocallyException(Exception):
 # LOCAL STORAGE UTILS
 
 
-def _generate_file_path(city_ref, tag='store'):
+def _generate_file_path(city_ref, file_extension='h5'):
     """ Generate a file path for local storage data
-
     :param city_ref: str with the name used to locally refer to the file
-    :param tag: str among {'store', 'activities', 'residential'}
+    :param file_extension: str with the extension used for local storage
     :returns: path to the file location
     :rtype: str
-
     """
-    city_base_dir = os.join(BASE_DIR, city_ref)
-    if not os.path.exists(city_base_dir):
-        os.makedirs(city_base_dir)
-
-    extension = 'h5'
-    if tag != 'store':
-        extension = 'shp'
-
-    return os.join(city_base_dir, tag + '.' + extension)
+    return join(BASE_DIR, city_ref + '.' + file_extension)
 
 
 def _get_local_data(store, hdfs_keys):
@@ -93,8 +83,8 @@ def _load_data(city_ref, hdfs_keys, extra_method=None, extra_args=None):
 
     :param city_ref: str with the name used to locally refer to the file
     :param hdfs_keys: str or list of str with the key(s) used for storage at `store`
-    :param extra_method: 
-    :param extra_args: 
+    :param extra_method:
+    :param extra_args:
     :returns: data at `store` for `hdfs_keys`
     :rtype: pandas.DataFrame or dict of pandas.DataFrame
 
@@ -118,7 +108,8 @@ def _load_data(city_ref, hdfs_keys, extra_method=None, extra_args=None):
             if isinstance(result, pd.DataFrame):
                 _update_local_data(store, {hdfs_keys[0]: result})
             elif isinstance(result, dict):
-                # assert len(result) == len(hdfs_keys), "The `extra_arg_method` must return a component for each key in hdfs_keys"
+                # assert len(result) == len(hdfs_keys), "The `extra_arg_method`
+                # must return a component for each key in hdfs_keys"
                 _update_local_data(store, result)
             print("The data has been stored locally with success")
     return result
@@ -142,16 +133,16 @@ def load_graph(city_ref, bbox=None, tags=None):
     return GeoGraph(result[GRAPH_KEYS[0]], result[GRAPH_KEYS[1]])
 
 
-def load_graph_centrality(city_ref, geo_graph=None):
+def load_graph_centrality(city_ref, graph=None):
     """ Loads the centrality indices for `city_ref` if they are stored locally, or determines them
 
     :param city_ref: str with the name used to locally reference the file
-    :param geo_graph: GeoGraph corresponding to `city_ref`
-    :returns: 'betweeness', 'closeness' and 'degree' centralities for each node of `geo_graph`
+    :param graph: GeoGraph corresponding to `city_ref`
+    :returns: 'betweeness', 'closeness' and 'degree' centralities for each node of `graph`
     :rtype: pandas.DataFrame
 
     """
-    return _load_data(city_ref, GRAPH_CENTRALITY_KEYS, geo_graph.get_centrality_df, [])
+    return _load_data(city_ref, GRAPH_CENTRALITY_KEYS, graph.get_centrality_df, [])
 
 
 def load_osm_pois(city_ref, bbox=None):
@@ -166,38 +157,43 @@ def load_osm_pois(city_ref, bbox=None):
     return _load_data(city_ref, OSM_POIS_KEYS, osm_loader.pois_from_bbox, [bbox])
 
 
-def load_pois(city_ref):
+def load_pois(city_ref, pois_shp_path):
     """ Loads the points of interest assuming that the activities and residential shapefiles are present.
 
     :param city_ref: str with the name used to locally reference the file
+    :param pois_shp_path:
     :returns: pois with the columns 'key', 'value', 'lon' (longitude), 'lat' (latitude) and 'cat'
     :rtype: pandas.DataFrame
 
     """
-    return _load_data(city_ref, OSM_EXTRACTED_POIS_KEYS, eu_utils.get_extracted_osm_points, [_generate_file_path(city_ref, tag=category)for category in OSM_EXTRACTED_POIS_KEYS])
+    try:
+        return _load_data(city_ref, POIS_KEYS,
+                          shp_loader.get_extracted_osm_points, [pois_shp_path])
+    except shp_loader.PoisShpDoesNotExist:
+        print('%s does not exist. You might try to load OSM pois instead through `load_osm_pois`.' % pois_shp_path)
 
 
 def load_graph_kde(city_ref, graph=None, pois=None):
-    """ Loads the categorized pois density at the urban nodes of `geo_graph` for `city_ref` if they are stored locally, or determines them
+    """ Loads the categorized pois density at the urban nodes of `graph` for `city_ref` if they are stored locally, or determines them
 
     :param city_ref: str with the name used to locally reference the file
     :param graph: GeoGraph corresponding to `city_ref`
-    :param pois: 
-    :returns: logarithm of the density at each node of `geo_graph`
+    :param pois:
+    :returns: logarithm of the density at each node of `graph`
     :rtype: pandas.DataFrame
 
     """
-    return _load_data(city_ref, GRAPH_KDE_KEYS, kde.get_nodes_kde, [geo_graph, pois])
+    return _load_data(city_ref, GRAPH_KDE_KEYS, kde.get_nodes_kde, [graph, pois])
 
 
 def load_grid_kde(city_ref, pois=None, bbox=None):
     """ Loads the categorized pois density at the urban nodes of `geo_graph` for `city_ref` if they are stored locally, or determines them
 
     :param city_ref: str with the name used to locally reference the file
-    :param pois: 
-    :param bbox: 
+    :param pois:
+    :param bbox:
     :returns: density at each point of the grid
     :rtype: pandas.DataFrame
 
     """
-    return _load_data(city_ref, GRID_KDE_KEYS, kde.get_all_kde, [geo_graph, pois])
+    return _load_data(city_ref, GRID_KDE_KEYS, kde.get_grid_all_kde, [pois, bbox])
