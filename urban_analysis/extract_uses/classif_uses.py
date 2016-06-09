@@ -61,7 +61,7 @@ leisure_activies = ['adult_gaming_centre','amusement_arcade','beach_resort','dan
 	-> 'building' = Civic/Amenity ?
 '''
 
-def keyCategoryMapping(pois_df):
+def key_category_mapping(pois_df):
 	####################
 	### Process landuse key
 	# landuse => commercial/industrial

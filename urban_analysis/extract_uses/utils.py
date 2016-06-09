@@ -19,7 +19,7 @@ poly_fields = [['osm_id', 'N', 19, 0], ['access', 'C', 11, 0], ['aerialway', 'C'
 
 """ Reduced fields: osm_id, value, key 
 """
-reduced_fiels = [['osm_id', 'N', 19, 0], [
+reduced_fields = [['osm_id', 'N', 19, 0], [
     'value', 'C', 32, 0], ['key', 'C', 32, 0]]
 
 
