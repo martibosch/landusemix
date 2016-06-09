@@ -26,6 +26,11 @@ uninteresting_tags = {
 
 # UTILS
 
+
+def _pitagoras_aprox_dist(lat1, lon1, lat2, lon2):
+    return ((lat1 - lat2)**2 + (lon1 - lon2)**2)**.5
+
+
 def _great_circle_dist(lat1, lon1, lat2, lon2):
     """ Get the distance (in meters) between two lat/lon points via the Haversine formula.
 
@@ -102,6 +107,7 @@ def _build_query(bbox, query_type, tags=None):
         lat_min=bbox[0], lon_min=bbox[1], lat_max=bbox[2], lon_max=bbox[3],
     )
 
+
 def _make_osm_query(query):
     """ Make a request to OSM and return the parsed JSON.
 
@@ -118,7 +124,7 @@ def _make_osm_query(query):
 
 
 # QUERY RESPONSE
-## ROAD GRAPH
+# ROAD GRAPH
 def _process_node(e):
     """ Process a node element entry into a dict suitable for going into a Pandas DataFrame.
 
@@ -196,7 +202,7 @@ def _parse_graph_osm_query(data):
 
 
 # DATA PROCESSING
-## ROAD GRAPH
+# ROAD GRAPH
 def _intersection_nodes(waynodes):
     """ Get a set of all the nodes that appear in 2 or more ways.
 
@@ -209,13 +215,15 @@ def _intersection_nodes(waynodes):
     return set(counts[counts > 1].index.values)
 
 
-def _node_pairs(nodes, ways, waynodes, two_way=True):
+def _node_pairs(nodes, ways, waynodes, two_way=True, distance_type='pitagoras', weight_distance=True):
     """ Create a table of node pairs with the distances between them.
 
     :param nodes: pandas.DataFrame with 'lat' and 'lon' columns
     :param ways: pandas.DataFrame of way metadata
     :param waynodes: pandas.DataFrame linking way IDs to node IDs. Way IDs should be in the index, with a column called 'node_ids'.
     :param two_way: bool, whether the routes are two-way. If True, node pairs will only occur once. 
+    :param distance_type: str 'pitagoras' or 'haversine'
+    :param weight_distance: 
     :returns: pairs; with columns of 'from_id', 'to_id', and 'distance'. The index will be a MultiIndex of (from id, to id). The distance metric is in meters.
     :rtype: pandas.DataFrame
 
@@ -225,13 +233,14 @@ def _node_pairs(nodes, ways, waynodes, two_way=True):
     intersections = _intersection_nodes(waynodes)
     waymap = waynodes.groupby(level=0, sort=False)
     pairs = []
-    
+
     for id, row in ways.iterrows():
         nodes_in_way = waymap.get_group(id).node_id.values
         nodes_in_way = filter(lambda x: x in intersections, nodes_in_way)
-        
-        # row.highway contains the highway type which connects the potential nodes (from_node, to_node)
-        highwayWeight = osm_roads.getHighwayWeight(row.highway)
+
+        # row.highway contains the highway type which connects the potential
+        # nodes (from_node, to_node)
+        highway_weight = osm_roads.get_highway_weight(row.highway)
 
         if len(nodes_in_way) < 2:
             # no nodes to connect in this way
@@ -240,10 +249,14 @@ def _node_pairs(nodes, ways, waynodes, two_way=True):
         for from_node, to_node in pairwise(nodes_in_way):
             fn = nodes.loc[from_node]
             tn = nodes.loc[to_node]
-            
-            distance = _great_circle_dist(fn.lat, fn.lon, tn.lat, tn.lon)
-            #distance_weighted = distance * highwayWeight
-            distance = distance * highwayWeight
+
+            if distance_type == 'pitagoras':
+                distance = _pitagoras_aprox_dist(
+                    fn.lat, fn.lon, tn.lat, tn.lon)
+            else:
+                distance = _great_circle_dist(fn.lat, fn.lon, tn.lat, tn.lon)
+            if weight_distance:
+                distance = distance * highway_weight
 
             pairs.append({
                 'from_id': from_node,
@@ -267,7 +280,7 @@ def _node_pairs(nodes, ways, waynodes, two_way=True):
     return pairs
 
 
-## POIS NODES
+# POIS NODES
 
 def _nodes_from_bbox(bbox, tags=None):
     """ Queries for OSM nodes within a bounding box that match given tags.
@@ -299,23 +312,24 @@ def _process_pois_df_columns(df, key, columns):
     df = df[columns].rename(columns={columns[0]: 'value'})
     df['value'] = df['value'].astype(str)
     df['key'] = key
+    df['category'] = 'activities'
     return df
 
 
-
-## ROAD GRAPH
+# ROAD GRAPH
 def graph_from_bbox(bbox, tags=None, two_way=True):
     """ Get road nodes and edges from a bounding lat/lon box.
     :param bbox: list of float of the form [lat_min, lon_min, lat_max, lon_max]
     :param tags: list or str with a tag request according to the Overpass QL (see http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide)
     :param two_way: bool whether the routes are two-way. If True, node pairs will only occur once.
     :returns: nodes_df, edges_df : pandas.DataFrame
-    :rtype: tuple
+    :rtype: dict
     """
     if not tags:
         tags = _generate_osm_tag(osm_roads.key, osm_roads.values)
 
-    nodes, ways, waynodes = _parse_graph_osm_query(_make_osm_query(_build_query(bbox, 'way', tags=tags))) # ways_in_bbox(bbox, tags)
+    nodes, ways, waynodes = _parse_graph_osm_query(_make_osm_query(
+        _build_query(bbox, 'way', tags=tags)))  # ways_in_bbox(bbox, tags)
     pairs = _node_pairs(nodes, ways, waynodes, two_way=two_way)
 
     # make the unique set of nodes that ended up in pairs
@@ -323,11 +337,11 @@ def graph_from_bbox(bbox, tags=None, two_way=True):
         set(pairs['from_id'].unique()).union(set(pairs['to_id'].unique())))
     nodes = nodes.loc[node_ids]
 
-    return (pd.DataFrame({'lon': nodes['lon'], 'lat': nodes['lat']}),
-            pd.DataFrame({'from': pairs['from_id'], 'to': pairs['to_id']}).join(pairs[['distance']]))
+    return {HDFS_KEYS[0]: pd.DataFrame({'lon': nodes['lon'], 'lat': nodes['lat']}),
+            HDFS_KEYS[1]: pd.DataFrame({'from': pairs['from_id'], 'to': pairs['to_id']}).join(pairs[['distance']])}
 
 
-## POIS NODES
+# POIS NODES
 
 def pois_from_bbox(bbox):
     """ Queries OSM for points of interest inside a `bbox` according to the OSM keys and values
@@ -337,12 +351,13 @@ def pois_from_bbox(bbox):
     :rtype: pandas.DataFrame
 
     """
-    pois = pd.DataFrame() # columns=['key','value','lon','lat'])
+    pois = pd.DataFrame()  # columns=['key','value','lon','lat'])
     for key, values, columns in zip(osm_pois.keys, osm_pois.values, osm_pois.columns):
         try:
-            df = _process_pois_df_columns(_nodes_from_bbox(bbox, tags=_generate_osm_tag(key, values)), key, columns)
+            df = _process_pois_df_columns(_nodes_from_bbox(
+                bbox, tags=_generate_osm_tag(key, values)), key, columns)
             if len(df) > 1:
                 pois = pd.concat([pois, df])
-        except RuntimeError: # the query result is empty
+        except RuntimeError:  # the query result is empty
             pass
     return pois
