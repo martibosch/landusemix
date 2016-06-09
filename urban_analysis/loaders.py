@@ -157,7 +157,7 @@ def load_osm_pois(city_ref, bbox=None):
     return _load_data(city_ref, OSM_POIS_KEYS, osm_loader.pois_from_bbox, [bbox])
 
 
-def load_pois(city_ref, pois_shp_path):
+def load_pois(city_ref, pois_shp_path=None):
     """ Loads the points of interest assuming that the activities and residential shapefiles are present.
 
     :param city_ref: str with the name used to locally reference the file
