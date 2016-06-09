@@ -44,9 +44,14 @@ _building_columns = ['building', 'lon', 'lat']
 _landuse_columns = ['landuse', 'lon', 'lat']
 _leisure_columns = ['leisure', 'lon', 'lat']
 
-keys = ['amenity','shop','building','landuse','leisure']
-values = [_amenity_activities, _shop_activities, _building_activities, _landuse_activities, _leisure_activies]
-columns = [_amenity_columns, _shop_columns, _building_columns, _landuse_columns, _leisure_columns]
+# keys = ['amenity','shop','building','landuse','leisure']
+# values = [_amenity_activities, _shop_activities, _building_activities, _landuse_activities, _leisure_activies]
+# columns = [_amenity_columns, _shop_columns, _building_columns, _landuse_columns, _leisure_columns]
+
+# NO LANDUSE NOR BUILDINGS HERE, UNCOMENT UPPER DEFINITIONS IF YOU WANT IT
+keys = ['amenity','shop','leisure']
+values = [_amenity_activities, _shop_activities, _leisure_activies]
+columns = [_amenity_columns, _shop_columns, _leisure_columns]
 
 # tag_iterator = (generate_tag(key, value) for key, value in zip(keys, values))
 
