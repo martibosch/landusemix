@@ -87,6 +87,34 @@ def graph_centrality_kde(graph, centrality):
                            node.id] for node in geo_graph], node_size=50, cmap=cmap)
 
 
+def plot_category_kde(category_kde, pois, xx, yy, category_label=None):
+    """
+
+    :param pandas.DataFrame category_kde: 
+    :param pandas.DataFrame pois: 
+    :param numpy.array xx: 
+    :param numpy.array yy: 
+    :returns: 
+    :rtype: 
+
+    """
+
+    fig = plt.figure(figsize=(16, 8))
+    ax1 = fig.add_subplot(1, 2, 1)
+    ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+    ax1.scatter(pois['lon'], pois['lat'])
+    if category_label:
+        ax1.set_ylabel(category_label, rotation=90)
+    ax2.plot_surface(xx, yy, category_kde, cmap=cm.RdYlBu)
+    ax2.set_xlabel('lon', labelpad=-10)
+    ax2.set_ylabel('lat', labelpad=-10)
+    ax2.zaxis.set_rotate_label(False)  # workaround
+    ax2.set_zlabel(r'$f$', rotation=0, labelpad=-15)
+    ax2.w_xaxis.set_ticklabels([])
+    ax2.w_yaxis.set_ticklabels([])
+    ax2.w_zaxis.set_ticklabels([])
+
+
 def plot_categories_kde(categories_kde, pois, xx, yy):
     """ 
 
@@ -99,7 +127,6 @@ def plot_categories_kde(categories_kde, pois, xx, yy):
 
     """
     n_rows = len(categories_kde)
-    base_figsize = 8
 
     fig = plt.figure(figsize=(8, 8 * n_rows))
     i = 1
