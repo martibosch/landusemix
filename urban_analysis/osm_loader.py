@@ -337,8 +337,8 @@ def graph_from_bbox(bbox, tags=None, two_way=True):
         set(pairs['from_id'].unique()).union(set(pairs['to_id'].unique())))
     nodes = nodes.loc[node_ids]
 
-    return {HDFS_KEYS[0]: pd.DataFrame({'lon': nodes['lon'], 'lat': nodes['lat']}),
-            HDFS_KEYS[1]: pd.DataFrame({'from': pairs['from_id'], 'to': pairs['to_id']}).join(pairs[['distance']])}
+    return {'nodes': pd.DataFrame({'lon': nodes['lon'], 'lat': nodes['lat']}),
+            'edges': pd.DataFrame({'from': pairs['from_id'], 'to': pairs['to_id']}).join(pairs[['distance']])}
 
 
 # POIS NODES
