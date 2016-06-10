@@ -22,7 +22,7 @@ def _category_scatter(x, y, label=None, scatter_kws=None, line_kws=None, ax=None
     return sns.regplot(x, y, fit_reg=False, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
 
 
-def pois_scatter(pois, by=['key'], base_figsize=8, scatter_kws=None, line_kws=None):
+def pois_scatter(pois, by=['category'], base_figsize=8, scatter_kws=None, line_kws=None):
     """ Creates a scatter plot for each group indicated with `by`
 
     :param pandas.DataFrame pois: pois with the columns 'key', 'value', 'lon' (longitude), 'lat' (latitude)
@@ -44,7 +44,7 @@ def pois_scatter(pois, by=['key'], base_figsize=8, scatter_kws=None, line_kws=No
     # return ax
 
 
-def pois_scatter_kde(pois, by=['key'], base_figsize=8, scatter_kws=None, line_kws=None, **kwargs):
+def pois_scatter_kde(pois, by=['category'], base_figsize=8, scatter_kws=None, line_kws=None, **kwargs):
     """ 
 
     :param pandas.DataFrame pois: 

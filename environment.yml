@@ -47,6 +47,7 @@ dependencies:
 - openssl=1.0.2h=0
 - pandas=0.18.1=np110py27_0
 - path.py=8.2.1=py27_0
+- patsy=0.4.1=py27_0
 - pexpect=4.0.1=py27_0
 - pickleshare=0.5=py27_0
 - pip=8.1.1=py27_1
@@ -79,6 +80,7 @@ dependencies:
 - six=1.10.0=py27_0
 - sqlite=3.9.2=0
 - ssl_match_hostname=3.4.0.2=py27_1
+- statsmodels=0.6.1=np110py27_1
 - terminado=0.5=py27_1
 - tk=8.5.18=0
 - tornado=4.3=py27_0
