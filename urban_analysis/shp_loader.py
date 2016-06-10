@@ -6,32 +6,6 @@ class PoisShpDoesNotExist(Exception):
     pass
 
 
-def byte_to_str(x, threshold_length=None):
-    """ To use only in Python2: decode the bytes to utf-8, and strip if it is too long
-    """
-    if (threshold_length != None):
-        if (threshold_length < 25):
-            print('Be careful, threshold length smaller than 50!')
-            quit()
-    if isinstance(x, bytes):
-        # Decode to UTF8, then strip to remove white blank spaces at
-        # begining/end
-        try:
-            if (threshold_length == None):
-                return x.decode('UTF-8').strip()
-            else:
-                return x[0:threshold_length].decode('UTF-8').strip()
-            # If UnicodeDecodeError because of bytes length, shrink to avoid
-            # error
-        except UnicodeDecodeError:  # Recursive shrinking the length of the object
-            if (threshold_length == None):
-                return byte_to_str(x, len(x) - 1)
-            else:
-                return byte_to_str(x, threshold_length - 1)
-    else:
-        return x
-
-
 def read_shp_dbf(file_shape):
     """ Read a shapefile, returning separately shapes and attributes
     """
@@ -41,13 +15,11 @@ def read_shp_dbf(file_shape):
         raise PoisShpDoesNotExist
 
     shapes = reader_shp.shapes()
-    # Columns correspond to all the elements excepts for the first one: A
-    # deletion flag
+    # Columns correspond to all the elements excepts for the first one: A deletion flag
     columns = [list[0]
                for list in reader_shp.fields[1:len(reader_shp.fields)]]
     # Conver to data frame and decode
-    return shapes, pd.DataFrame(
-        reader_shp.records(), columns=columns).applymap(byte_to_str)
+    return shapes, pd.DataFrame(reader_shp.records(), columns=columns)
 
 
 def get_extracted_osm_points(shp_file_path):
@@ -58,7 +30,6 @@ def get_extracted_osm_points(shp_file_path):
     :rtype: pandas.DataFrame
 
     """
-
     # TODO: assert that shp_file exists
     shapes, df = read_shp_dbf(shp_file_path)
 

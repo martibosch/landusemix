@@ -72,8 +72,7 @@ def _update_local_data(store, df_dict, format='table'):
     :param df_dict: dict indexed by hdfs keys and with pandas.DataFrame as values
     """
     # surround by try/except?
-    [store.put(hdfs_key, df, format=format)
-     for hdfs_key, df in df_dict.items()]
+    [store.put(hdfs_key, df, format=format) for hdfs_key, df in df_dict.items()]
 
 
 # QUERY UTILS
