@@ -23,10 +23,6 @@ def main(points_shapefile, suffix_out_shp):
     Generates an activity point file, and a residential point file
     Uses the reduced fields: osm_id, key, value
     """
-    if (not (os.path.isfile(points_shapefile))):
-        if (parameters.USE_verbose):
-            print('Empty file:', points_shapefile)
-        return
     ##########################################################################
     # Read data-set
     # Point shapefile
