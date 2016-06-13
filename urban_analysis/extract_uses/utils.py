@@ -1,6 +1,7 @@
 import parameters
 import pandas as pd
 import numpy as np
+import os
 import shapefile
 import shutil
 import shapely

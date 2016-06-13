@@ -51,9 +51,12 @@ def mergeFile(removeParts, to_merge_in_shp, out_shp_merged):
 	if (parameters.USE_verbose):
 		print("Merge file",to_merge_in_shp)
 
-	callOgr(['ogr2ogr',"-f","ESRI Shapefile",out_shp_merged,to_merge_in_shp[0],"-lco","ENCODING=UTF-8","-overwrite"])
-	for i in range(1,len(to_merge_in_shp)):
-		callOgr(['ogr2ogr','-update','-append',out_shp_merged,to_merge_in_shp[i],"-lco","ENCODING=UTF-8"])
+	# Only existing files
+	to_merge_in_shp_existing = [ i for i in to_merge_in_shp if os.path.isfile(i) ]
+
+	callOgr(['ogr2ogr',"-f","ESRI Shapefile",out_shp_merged,to_merge_in_shp_existing[0],"-lco","ENCODING=UTF-8","-overwrite"])
+	for i in range(1,len(to_merge_in_shp_existing)):
+		callOgr(['ogr2ogr','-update','-append',out_shp_merged,to_merge_in_shp_existing[i],"-lco","ENCODING=UTF-8"])
 	
 	# Remove part-files ?
 	if (removeParts):
@@ -229,6 +232,7 @@ def clip_PolygonFile(in_shp, out_shp):
 
 	# Iterate through the shapes and attributes at the same time
 	for poly in r.iterShapeRecords():
+
 	    # Shape geometry
 	    geom = poly.shape
 	    # Database attributes 
@@ -257,6 +261,7 @@ def clip_PolygonFile(in_shp, out_shp):
 	    
 	# Save the new shapefile! (.shp, .shx, .dbf) with its respective quadrant
 	for i in range(0,parameters.numCuts):
-		w_fq[i].save(out_shp+"_q"+str(i))
+		if ( len(w_fq[i].records) > 0 ): # If at least a shape exists, save the file
+			w_fq[i].save(out_shp+"_q"+str(i))
 	# Save polygons which lie within at least two quadrants
 	w_several_quadrants.save(out_shp+"_sq")

@@ -104,5 +104,5 @@ numCuts = 4
 
 ###
 # When defining mapping the categories, use multi activities classification (e.g. shop, comercial/industrial, leisure/amenity) ? Otherwise: 'activity'
-USE_multiActivitiesClassification = True
+USE_multiActivitiesClassification = False
 ####################################################################################
