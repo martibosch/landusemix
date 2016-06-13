@@ -17,7 +17,7 @@ OSM_POIS_KEYS = ['osm_pois']
 # OSM_EXTRACTED_POIS_KEYS = ['activities', 'residential']
 POIS_KEYS = ['pois']
 GRAPH_KDE_KEYS = ['graph_kde']
-GRID_KDE_KEYS = ['activities', 'residential', 'total']
+GRID_KDE_KEYS = ['activity', 'residential', 'total']
 
 
 # CUSTOM EXCEPTION
@@ -75,8 +75,8 @@ def _update_local_data(store, df_dict, format='table'):
     [store.put(hdfs_key, df, format=format)
      for hdfs_key, df in df_dict.items()]
 
-
 # QUERY UTILS
+
 
 def _load_data(city_ref, hdfs_keys, extra_method=None, extra_args=None):
     """ Get the data, either from the local `store` or remotely through `extra_method` and store it locally.
@@ -186,7 +186,7 @@ def load_graph_kde(city_ref, graph=None, pois=None):
     return _load_data(city_ref, GRAPH_KDE_KEYS, kde.get_nodes_kde, [graph, pois])
 
 
-def load_grid_kde(city_ref, pois=None, bbox=None, grid_step=None):
+def load_grid_kde(city_ref, pois=None, bbox=None, grid_step=.0015):
     """ Loads the categorized pois density at the urban nodes of `geo_graph` for `city_ref` if they are stored locally, or determines them
 
     :param city_ref: str with the name used to locally reference the file
