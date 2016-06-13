@@ -83,10 +83,9 @@ def performExtraction(point_shapefile, polygon_shapefile, population_count_file 
 	if (parameters.USE_Merge_categories):
 		cut_shapefile.mergeFinalCategories(parameters.fn_prefix,parameters.numCuts,parameters.deleteMergedParts)
 	########
-	if (population_count_file != None):
-		### Process: Perform population down-scaling and distribute to each residential point
-		population.population_downscaling(population_count_file, parameters.fn_residential_final)
-		gc.collect()
+	### Process: Perform population down-scaling and distribute to each residential point
+	population.population_downscaling(population_count_file, parameters.fn_residential_final)
+	gc.collect()
 	########
 	if (parameters.USE_uniquePointsFile):
 		# Merge final activities and residential shapefile into one

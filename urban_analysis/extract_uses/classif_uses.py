@@ -67,6 +67,12 @@ def keyCategoryMapping(pois_df, USE_multiActivitiesClassification):
 		####################
 		### Categories: commercial/industrial , leisure/amenity , shop
 		#######
+		'''TODO: If key is != {residential,shop,landuse,leisure,amenity,building,inferred} ?
+		For instance, 'total' happens when processing avila_spain (I think...)
+		By default, set what value? Activity?
+		'''
+
+
 		### Residential 
 		pois_df.loc[ (pois_df.key.isin(["residential"]) ) , 'category'] = 'residential'
 		
