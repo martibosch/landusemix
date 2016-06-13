@@ -152,55 +152,62 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 	if (parameters.USE_verbose):
 		print('Population down-scaling')
 	####################################################################################
-	# Open tif file
-	dataset = gdal.Open(population_count_file, GA_ReadOnly)
-	# GDAL affine transform parameters, According to gdal documentation xoff/yoff are image left corner, a/e are pixel width/height and b/d is rotation and is zero if image is north up. 
-	GeoTransform = dataset.GetGeoTransform()
-
-	# Get the desired region of interest
-	x1, y1, x2, y2 = getROI(GeoTransform, residential_point_shapefile)
-
-	# Get the ROI of the population count matrix
-	population_np = getSubArray(dataset, x1,y1,x2,y2)
-
+	
 	# Read shapefile and attributes
 	shape_residential_pts, df_residential_pts = utils.read_shp_dbf(residential_point_shapefile)
 	# Replace with population format: Key=residential, value=population count
 	df_residential_pts['value'] = 0
 	df_residential_pts['key'] = "residential"
-	# Create the points structure
-	s_residential_pts = pd.Series( [Point(shape.points[0]) for shape in shape_residential_pts] )
-	##########################
 
-	if (parameters.USE_verbose):
-		start_time = time.time()
+	if (population_count_file != None): # If population count file is provided
+		# Create the points structure
+		s_residential_pts = pd.Series( [Point(shape.points[0]) for shape in shape_residential_pts] )
 
-	# For the given raster, assign to the corresponding residential points its population count
-	for row in range(0,population_np.shape[0]):
-		for col in range(0,population_np.shape[1]):
-			# Population count
-			pop_count = population_np[row,col]
+		# Open tif file
+		dataset = gdal.Open(population_count_file, GA_ReadOnly)
+		# GDAL affine transform parameters, According to gdal documentation xoff/yoff are image left corner, a/e are pixel width/height and b/d is rotation and is zero if image is north up. 
+		GeoTransform = dataset.GetGeoTransform()
 
-			# Get real coordinates respect to file 
-			#x, y = int(cols[0])+x1 , int(rows[0])+y1
-			x, y = int(col+x1) , int(row+y1)
-			
-			# Get the latitude,longitude bounding box to identify points contained within the box
-			lat1,long1,lat2,long2 = getContaining_LatitudeLongitude(GeoTransform, x, y)
-			# Create a geometry box for the containing coordinates
-			Bbox = geo.box(lat1,long1,lat2,long2)
+		# Get the desired region of interest
+		x1, y1, x2, y2 = getROI(GeoTransform, residential_point_shapefile)
 
-			# For all residential points, pick those which are contained in the bounding box
-			within_residential_pts = s_residential_pts[ s_residential_pts.apply(lambda s: Bbox.contains(s)) ]
+		# Get the ROI of the population count matrix
+		population_np = getSubArray(dataset, x1,y1,x2,y2)
+		##########################
 
-			# Assign pop_count distributed in an homogeneous way across the residential points
-			homogeneousPopCountDistribution = pop_count / len(within_residential_pts)
+		if (parameters.USE_verbose):
+			start_time = time.time()
 
-			# Set the value
-			df_residential_pts.loc[ within_residential_pts.index ,'value'] = homogeneousPopCountDistribution
+		# For the given raster, assign to the corresponding residential points its population count
+		for row in range(0,population_np.shape[0]):
+			for col in range(0,population_np.shape[1]):
+				# Population count
+				pop_count = population_np[row,col]
 
-	if (parameters.USE_verbose):
-		print("--- %s minutes ---" % ((time.time() - start_time)/60.) )
+				# Get real coordinates respect to file 
+				#x, y = int(cols[0])+x1 , int(rows[0])+y1
+				x, y = int(col+x1) , int(row+y1)
+				
+				# Get the latitude,longitude bounding box to identify points contained within the box
+				lat1,long1,lat2,long2 = getContaining_LatitudeLongitude(GeoTransform, x, y)
+				# Create a geometry box for the containing coordinates
+				Bbox = geo.box(lat1,long1,lat2,long2)
+
+				# For all residential points, pick those which are contained in the bounding box
+				within_residential_pts = s_residential_pts[ s_residential_pts.apply(lambda s: Bbox.contains(s)) ]
+
+				# Assign pop_count distributed in an homogeneous way across the residential points
+				homogeneousPopCountDistribution = pop_count / len(within_residential_pts)
+
+				# Set the value
+				df_residential_pts.loc[ within_residential_pts.index ,'value'] = homogeneousPopCountDistribution
+
+		if (parameters.USE_verbose):
+			print("--- %s minutes ---" % ((time.time() - start_time)/60.) )
+	else:
+		# Population count = None
+		if (parameters.USE_verbose):
+			print('No population count file provided')
 
 	# Save file
 	utils.toFile(parameters.fn_prefix+parameters.fn_final_clasif+parameters.fn_residential, shape_residential_pts, df_residential_pts, shapefile.POINT, utils.reducedFields)
