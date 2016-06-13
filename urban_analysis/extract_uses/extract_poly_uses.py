@@ -2,6 +2,7 @@ import numpy as np  # 1.7 or higher
 import pandas as pd # 0.10 or higher
 from shapely.geometry import Polygon
 import shapefile
+import os
 
 import utils
 import classif_uses
@@ -18,6 +19,10 @@ def main(polygon_shapefile, suffix_out_shp):
 	Generates an activity point file, and a residential point file
 	Uses the reduced fields: osm_id, key, value
 	"""
+	if (not ( os.path.isfile(polygon_shapefile+".shp") ) ):
+		if (parameters.USE_verbose):
+			print('Empty file:',polygon_shapefile)
+		return
 	####################################################################################
 	### Read data-set
 	# Polygon shapefile

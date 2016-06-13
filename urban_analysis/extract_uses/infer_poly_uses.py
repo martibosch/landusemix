@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from shapely.geometry import Polygon
 import shapefile
+import os
 
 import parameters
 import classif_uses
@@ -215,7 +216,10 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 	if (not (parameters.USE_infer_polyBuildings) ):
 		print('Not inferring polygons')
 		return
-
+	if (not ( os.path.isfile(polygon_shapefile+".shp") ) ):
+		if (parameters.USE_verbose):
+			print('Empty file:',polygon_shapefile)
+		return
 	################################################
 	### Read data-set
 	# Polygon shapefile

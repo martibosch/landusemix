@@ -4,6 +4,7 @@ from matplotlib.pyplot import *
 from time import sleep
 from shapely.geometry import Polygon
 import shapefile
+import os
 
 import utils
 import classif_uses
@@ -20,7 +21,7 @@ def main(points_shapefile, suffix_out_shp):
 	Generates an activity point file, and a residential point file
 	Uses the reduced fields: osm_id, key, value
 	"""
-	if (not ( os.path.isfile(points_shapefile) ) ):
+	if (not ( os.path.isfile(points_shapefile+".shp") ) ):
 		if (parameters.USE_verbose):
 			print('Empty file:',points_shapefile)
 		return
