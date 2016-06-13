@@ -10,6 +10,7 @@ urban_analysis/notebooks/.ipynb_checkpoints/
 
 # hdfs store
 urban_analysis/hdfs_store/*.h5
+urban_analysis/notebooks/cities/
 
 # pdflatex files
 *.pdf
