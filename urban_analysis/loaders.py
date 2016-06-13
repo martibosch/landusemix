@@ -72,7 +72,8 @@ def _update_local_data(store, df_dict, format='table'):
     :param df_dict: dict indexed by hdfs keys and with pandas.DataFrame as values
     """
     # surround by try/except?
-    [store.put(hdfs_key, df, format=format) for hdfs_key, df in df_dict.items()]
+    [store.put(hdfs_key, df, format=format)
+     for hdfs_key, df in df_dict.items()]
 
 
 # QUERY UTILS
@@ -185,14 +186,15 @@ def load_graph_kde(city_ref, graph=None, pois=None):
     return _load_data(city_ref, GRAPH_KDE_KEYS, kde.get_nodes_kde, [graph, pois])
 
 
-def load_grid_kde(city_ref, pois=None, bbox=None):
+def load_grid_kde(city_ref, pois=None, bbox=None, grid_step=None):
     """ Loads the categorized pois density at the urban nodes of `geo_graph` for `city_ref` if they are stored locally, or determines them
 
     :param city_ref: str with the name used to locally reference the file
-    :param pois:
-    :param bbox:
+    :param pois: 
+    :param bbox: 
+    :param grid_step: 
     :returns: density at each point of the grid
     :rtype: pandas.DataFrame
 
     """
-    return _load_data(city_ref, GRID_KDE_KEYS, kde.get_grid_all_kde, [pois, bbox])
+    return _load_data(city_ref, GRID_KDE_KEYS, kde.get_grid_all_kde, [pois, bbox, grid_step])
