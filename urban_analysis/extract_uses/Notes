@@ -3,6 +3,7 @@
 * poly_to_pts can be done iterating row by row.
 	Use clip_PolygonFile from cut_shapefile as model
 	Way lower memory usage!!!
+* Infer points with building="yes" as well?
 ######################################
 ### Issues
 * Some regions are too isolated, and then few residential building exists. 

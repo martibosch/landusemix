@@ -203,6 +203,13 @@ def clip_PointFile(in_shp, out_shp):
 	for f,quad in zip(f1,PolygonQuadrants): # Output shapefile, bounding box quadrant
 		callOgr(["ogr2ogr","-overwrite","-f","ESRI Shapefile",f,in_shp,"-clipsrc",quad[0],quad[1],quad[2],quad[3]])
 
+	# Remove empty files
+	for f in f1:
+		read_f = shapefile.Reader(f)
+		if ( len(read_f.shapes()) == 0 ):# Empty file was clipped
+			removeFiles(f)
+			print('Removed empty file',f)
+
 ####################################
 
 def clip_PolygonFile(in_shp, out_shp):

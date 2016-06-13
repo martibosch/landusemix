@@ -31,6 +31,7 @@ def main(points_shapefile, suffix_out_shp):
     ####################################################################################
     ### Read data-set
     # Point shapefile
+    print(points_shapefile)
     point_shapes , df_point = utils.read_shp_dbf(points_shapefile)
     ####################################################################################
     
