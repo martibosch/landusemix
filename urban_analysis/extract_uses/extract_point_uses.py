@@ -20,20 +20,20 @@ def getNameSavedFiles(suffix_out_shp):
 
 
 def main(points_shapefile, suffix_out_shp):
-	"""Given the point shapefile, it extracts the residential/activity category they belong to
-	Generates an activity point file, and a residential point file
-	Uses the reduced fields: osm_id, key, value
-	"""
-	if (not ( os.path.isfile(points_shapefile+".shp") ) ):
-		if (parameters.USE_verbose):
-			print('Empty file:',points_shapefile)
-		return
-	####################################################################################
-	### Read data-set
-	# Point shapefile
-	point_shapes , df_point = utils.read_shp_dbf(points_shapefile)
-	####################################################################################
-
+    """Given the point shapefile, it extracts the residential/activity category they belong to
+    Generates an activity point file, and a residential point file
+    Uses the reduced fields: osm_id, key, value
+    """
+    if (not ( os.path.isfile(points_shapefile+".shp") ) ):
+        if (parameters.USE_verbose):
+            print('Empty file:',points_shapefile)
+        return
+    ####################################################################################
+    ### Read data-set
+    # Point shapefile
+    point_shapes , df_point = utils.read_shp_dbf(points_shapefile)
+    ####################################################################################
+    
     if (parameters.USE_verbose):
         print('extract_point_uses. Loaded Points:', len(df_point))
 
