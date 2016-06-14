@@ -4,66 +4,97 @@ from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 
 
-def _category_scatter(x, y, label=None, scatter_kws=None, line_kws=None, ax=None):
-    """ Creates a scatter plot for each group indicated with `by`
+def _category_scatter(x, y, title=None, label=None, scatter_kws=None, line_kws=None, ax=None):
+    """
 
-    :param pandas.DataFrame pois_df: pois with the columns 'key', 'value', 'lon' (longitude), 'lat' (latitude)
-    :param by: mapping function / list of functions, dict, Series, or tuple /list of column names. (see http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.groupby.html)
-    :type by: method, dict, pandas.Series, tuple, list
-    :param dict scatter_kws: additional keyword arguments to pass to plt.scatter
-    :param dict line_kws: additional keyword arguments to pass to plt.plot
-    :param plt.Axes ax:
+    :param x: 
+    :param y: 
+    :param title: 
+    :param label: 
+    :param scatter_kws: 
+    :param line_kws: 
+    :param ax: 
+    :returns: 
+    :rtype: 
+
     """
     if ax:
-        ax.set_title(label)
+        ax.set_title(title)
         ax.set_aspect('equal')
     else:
-        plt.title(label)
-    return sns.regplot(x, y, fit_reg=False, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
+        plt.title(title)
+    return sns.regplot(x, y, fit_reg=False, label=label, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
 
 
-def pois_scatter(pois, by=['category'], base_figsize=8, scatter_kws=None, line_kws=None):
-    """ Creates a scatter plot for each group indicated with `by`
-
-    :param pandas.DataFrame pois: pois with the columns 'key', 'value', 'lon' (longitude), 'lat' (latitude)
-    :param by: mapping function / list of functions, dict, Series, or tuple /list of column names. (see http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.groupby.html)
-    :type by: method, dict, pandas.Series, tuple, list
-    :param dict scatter_kws: additional keyword arguments to pass to plt.scatter
-    :param dict line_kws: additional keyword arguments to pass to plt.plot
-
-    """
-    category_gb = pois.groupby(by=by)
-    n_categories = len(category_gb)
-    fig, axes = plt.subplots(nrows=n_categories, ncols=1, sharey=True, sharex=True, figsize=(
-        base_figsize, base_figsize * n_categories))
-    if n_categories == 1:  # Must be iterable
-        axes = [axes]
-    for (label, df), ax in zip(category_gb, axes):
-        _category_scatter(df['lon'], df['lat'], label=label,
-                          scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
-    # return ax
-
-
-def pois_scatter_kde(pois, by=['category'], base_figsize=8, scatter_kws=None, line_kws=None, **kwargs):
+def pois_scatter(pois, overlap=False, by=['category'], base_figsize=8, scatter_kws=None, line_kws=None):
     """ 
 
-    :param pandas.DataFrame pois: 
-    :param list by: 
+    :param pois: 
+    :param overlap: 
+    :param by: 
     :param base_figsize: 
     :param scatter_kws: 
     :param line_kws: 
+    :returns: 
+    :rtype: 
 
     """
     category_gb = pois.groupby(by=by)
-    n_categories = len(category_gb)
-    fig, axes = plt.subplots(nrows=n_categories, ncols=2, sharey=True, sharex=True, figsize=(
-        base_figsize * 2, base_figsize * n_categories), squeeze=False)
-    for (label, df), ax_row in zip(category_gb, axes):
-        _category_scatter(df['lon'], df['lat'], label=label,
-                          scatter_kws=scatter_kws, line_kws=line_kws, ax=ax_row[0])
-        ax_kde = ax_row[1]
-        ax_kde.set_title(label)     # TODO: put a title for the row
-        sns.kdeplot(df['lon'], df['lat'], ax=ax_kde, **kwargs)
+    if overlap:
+        fig, ax = plt.subplots()
+        for label, df in category_gb:
+            _category_scatter(df['lon'], df['lat'], title='pois', label=label,
+                              scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
+        ax.legend(*ax.get_legend_handles_labels())
+    else:
+        n_categories = len(category_gb)
+        fig, axes = plt.subplots(nrows=n_categories, ncols=1, sharey=True, sharex=True, figsize=(
+            base_figsize, base_figsize * n_categories))
+        if n_categories == 1:  # Must be iterable
+            axes = [axes]
+        for (label, df), ax in zip(category_gb, axes):
+            _category_scatter(df['lon'], df['lat'], label=label,
+                              scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
+            # return ax
+
+
+def pois_scatter_kde(pois, overlap=False, by=['category'], base_figsize=8, xlim=None, ylim=None, scatter_kws=None, line_kws=None, **kwargs):
+    """ 
+
+    :param pois: 
+    :param overlap: 
+    :param by: 
+    :param base_figsize: 
+    :param scatter_kws: 
+    :param line_kws: 
+    :returns: 
+    :rtype: 
+
+    """
+    category_gb = pois.groupby(by=by)
+    if overlap:
+        fig, axes = plt.subplots(nrows=1, ncols=2, sharey=True, sharex=True, figsize=(
+            base_figsize * 2, base_figsize), squeeze=False)
+        for label, df in category_gb:
+            _category_scatter(pois['lon'], pois['lat'], title='pois', label=label,
+                              scatter_kws=scatter_kws, line_kws=line_kws, ax=axes[0][0])
+            sns.kdeplot(pois['lon'], pois['lat'], ax=axes[0][1], **kwargs)
+            if xlim and ylim:
+                for ax in axes[0]:
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
+                    ax.set_xticklabels([])
+                    ax.set_yticklabels([])
+    else:
+        n_categories = len(category_gb)
+        fig, axes = plt.subplots(nrows=n_categories, ncols=2, sharey=True, sharex=True, figsize=(
+            base_figsize * 2, base_figsize * n_categories), squeeze=False)
+        for (label, df), ax_row in zip(category_gb, axes):
+            _category_scatter(df['lon'], df['lat'], label=label,
+                              scatter_kws=scatter_kws, line_kws=line_kws, ax=ax_row[0])
+            ax_kde = ax_row[1]
+            ax_kde.set_title(label)     # TODO: put a title for the row
+            sns.kdeplot(df['lon'], df['lat'], ax=ax_kde, **kwargs)
     # return ax
 
 
