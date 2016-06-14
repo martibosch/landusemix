@@ -105,7 +105,19 @@ def getSubArray(dataset, x1, y1, x2, y2):
 	Rows = [ data[row] for row in range(y1,y2+1)]
 	# Extracted, from the selected rows, the selected columns
 	ColsOfRows = [ row[x1:x2+1] for row in Rows]
-	return np.matrix(ColsOfRows)
+
+	# Set no data values to 0
+	def setNoDataValue(x):
+	    noData = -4.07649103e+14
+	    noData_ = -407649103380480.0
+	    if (x == noData) or (x == noData_): # noData band, set a 0
+	        return 0
+	    else: # Original value
+	        return x
+	    
+	noDataFunc = np.vectorize(setNoDataValue)
+	# Return the matrix for the region of interest, where no data values are converted to 0's
+	return noDataFunc(np.matrix(ColsOfRows))
 
 def getContaining_LatitudeLongitude(GeoTransform, x0, y0):
 	""" Computes the latitude/longitude bounding box for the given pixel and geo-transform
@@ -118,16 +130,13 @@ def getContaining_LatitudeLongitude(GeoTransform, x0, y0):
 	# lat1, long1, lat2, long2
 	return topLeft[0] , bottomRight[1] , bottomRight[0], topLeft[1]
 
-
 ############################################################################
-
-def getROI(GeoTransform, point_shapefile, polygon_shapefile = None, line_shapefile = None):
-	""" Get the region of interest (pixels) using the Geotransform, given the input shapefile. 
+def getROI_fromBbox(GeoTransform, bbox):
+	""" Get the region of interest (pixels) using the Geotransform, given the bounding box.
 	"""
-	# Get Region of interest (x,y coordinates) given the Geotransformation, and the shapefile which contain the points
+	# Get Region of interest (x,y coordinates) given the Geotransformation, and the bounding box which contain the points
 	##########################
 	# bbox Format: latitude1 , longitude1 , latitude2, longitude2
-	bbox = utils.getBoundingBox(point_shapefile, polygon_shapefile, line_shapefile)
 
 	# Get the pixel values (floating precision) of the extremes given longitude/latitude
 	Pix1 = coord2pixel(GeoTransform, bbox[0] , bbox[1])
@@ -139,10 +148,34 @@ def getROI(GeoTransform, point_shapefile, polygon_shapefile = None, line_shapefi
 	y1 = int( math.floor( min( Pix1[1] , Pix2[1] ) ) )# Round DOWN the minimum value pixel Y
 	y2 = int( math.ceil( max( Pix1[1] , Pix2[1] ) ) )# Round UP the maximum value pixel Y
 	return x1, y1, x2, y2
+
+def getROI(GeoTransform, point_shapefile, polygon_shapefile = None, line_shapefile = None):
+	""" Get the region of interest (pixels) using the Geotransform, given the input shapefile. 
+	"""
+	# Get Region of interest (x,y coordinates) given the Geotransformation, and the shapefile which contain the points
+	##########################
+	# bbox Format: latitude1 , longitude1 , latitude2, longitude2
+	bbox = utils.getBoundingBox(point_shapefile, polygon_shapefile, line_shapefile)
+	return getROI_fromBbox(GeoTransform, bbox)
 ############################################################################
 
 
+def get_population_count(population_count_file, bbox):
+	"""
+	Calculates the population count in the given bounding box
+	"""
+	# Open tif file
+	dataset = gdal.Open(population_count_file, GA_ReadOnly)
+	# GDAL affine transform parameters, According to gdal documentation xoff/yoff are image left corner, a/e are pixel width/height and b/d is rotation and is zero if image is north up. 
+	GeoTransform = dataset.GetGeoTransform()
 
+	# Get the desired region of interest
+	x1, y1, x2, y2 = getROI_fromBbox(GeoTransform, bbox)
+
+	# Get the ROI of the population count matrix
+	population_np = getSubArray(dataset, x1,y1,x2,y2)
+	# Return the sum (population count for the given grid)
+	return population_np.sum()
 
 def population_downscaling(population_count_file, residential_point_shapefile):
 	"""
