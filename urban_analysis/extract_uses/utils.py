@@ -142,7 +142,7 @@ def toFile(fileName, shapes, shape_attrs, shapefileType, fields = None):
 	if (not(os.path.isfile(fileName+'.prj'))):
 		try:
 			shutil.copy(parameters.fn_prefix+'sample.prj',fileName+'.prj')
-		except ValueError:
+		except ValueError, IOError:
 			pass
 #####################
 
