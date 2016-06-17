@@ -26,15 +26,15 @@ def _category_scatter(x, y, title=None, label=None, scatter_kws=None, line_kws=N
     return sns.regplot(x, y, fit_reg=False, label=label, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
 
 
-def pois_scatter(pois, overlap=False, by=['category'], base_figsize=8, scatter_kws=None, line_kws=None):
+def pois_scatter(pois, overlap=False, base_figsize=8, scatter_kws=None, line_kws=None, by=['category']):
     """ 
 
     :param pois: 
     :param overlap: 
-    :param by: 
     :param base_figsize: 
     :param scatter_kws: 
     :param line_kws: 
+    :param by: 
     :returns: 
     :rtype: 
 
@@ -58,15 +58,17 @@ def pois_scatter(pois, overlap=False, by=['category'], base_figsize=8, scatter_k
             # return ax
 
 
-def pois_scatter_kde(pois, overlap=False, by=['category'], base_figsize=8, xlim=None, ylim=None, scatter_kws=None, line_kws=None, **kwargs):
+def pois_scatter_kde(pois, overlap=False, base_figsize=8, xlim=None, ylim=None, scatter_kws=None, line_kws=None, by=['category'], **kwargs):
     """ 
 
     :param pois: 
     :param overlap: 
-    :param by: 
     :param base_figsize: 
+    :param xlim: 
+    :param ylim: 
     :param scatter_kws: 
     :param line_kws: 
+    :param by: 
     :returns: 
     :rtype: 
 

@@ -19,17 +19,19 @@ def _kde(x, y, grid):
 
     """
 
-    bw_func = smnp.bandwidths.bw_scott #scott
-    #bw_func = smnp.bandwidths.bw_silverman #silverman
-    print('Bw func X',bw_func(x))
-    print('Bw func Y',bw_func(y))
+    bw_func = smnp.bandwidths.bw_scott  # scott
+    # bw_func = smnp.bandwidths.bw_silverman #silverman
+    print('Bw func X', bw_func(x))
+    print('Bw func Y', bw_func(y))
     # Test bw = 0.2 ?
 
-    #TODO: Check other option; normal_reference: normal reference rule of thumb (default), cv_ml: cross validation maximum likelihood, cv_ls: cross validation least squares
+    # TODO: Check other option; normal_reference: normal reference rule of
+    # thumb (default), cv_ml: cross validation maximum likelihood, cv_ls:
+    # cross validation least squares
     kde = smnp.KDEMultivariate([x, y], "cc", [bw_func(x), bw_func(y)])
     #kde = smnp.KDEMultivariate([x, y], "cc", 'cv_ml')
     #kde = smnp.KDEMultivariate([x, y], "cc", 'cv_ls')
-    
+
     return kde.pdf([grid[0].ravel(), grid[1].ravel()]).reshape(grid[0].shape)
 
 
@@ -94,6 +96,6 @@ def get_grid_all_kde(pois, bbox, grid_step=0.0015):
     for category, items in pois.groupby(by=['category']):
         kde_dict[category] = pd.DataFrame(_get_grid_kde(items, grid))
 
-    kde_dict['total'] = pd.DataFrame(_get_grid_kde(pois, grid))
+    # kde_dict['total'] = pd.DataFrame(_get_grid_kde(pois, grid))
 
     return kde_dict

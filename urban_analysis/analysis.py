@@ -1,18 +1,171 @@
-import loaders
+import numpy as np
 
+import loaders
+import plots
+import spatial_measures
+import utils
 
 
 class Analysis(object):
     """ Stores results and information about the analysis of city/urban area
 
     """
+
     def __init__(self, city_ref, bbox, grid_step=.0015):
         super(Analysis, self).__init__()
+        # basic info
         self.city_ref = city_ref
         self.bbox = bbox
-        self.grid_step
+        self._grid_step = grid_step
+        self._grid = None  # utils.grid_from_bbox(bbox, grid_step)
 
-    def load_data(self):
-        self.graph = loaders.load_graph(self.city_ref, self.bbox)
-        self.graph_centrality = loaders.load_centrality
-        self.pois = loaders.load_pois(self.city_ref)
+        # data
+        self._pois = None
+        self._kde = None
+        self._graph = None
+        # self.graph_centrality = None
+
+        # indicators
+        self._moran = None
+        self._entropy = None
+        self._relative_entropy = None
+
+        # stuff to cache
+        self._f_count_act = None
+        self._f_count_res = None
+        self._f_kde_act = None
+        self._f_kde_res = None
+
+    # STORED DATA STRUCTURES
+
+    @property
+    def pois(self):
+        if self._pois is not None:
+            pass
+        else:
+            self._pois = loaders.load_pois(self.city_ref)
+        return self._pois
+
+    @property
+    def kde(self):
+        if self._kde is not None:
+            pass
+        else:
+            self._kde = loaders.load_grid_kde(
+                self.city_ref, self.pois, self.bbox, self._grid_step)
+            [self._kde.__setitem__(key[:key.find('_')], self._kde.pop(key))
+             for key in self._kde.keys()]
+        return self._kde
+
+    @property
+    def graph(self):
+        if self._graph is not None:
+            pass
+        else:
+            self._graph = loaders.load_graph(self.city_ref, self.bbox)
+        return self._graph
+
+    # DATA STRUCTURES DERIVED FROM STORED DATA STRUCTURES
+
+    @property
+    def grid(self):
+        if self._grid is not None:
+            pass
+        else:
+            self._grid = utils.grid_from_bbox(self.bbox, self._grid_step)
+        return self._grid
+
+    @property
+    def f_count_act(self):
+        if self._f_count_act is not None:
+            pass
+        else:
+            self._f_count_act = spatial_measures.grid_cell_pois_count(
+                self.pois[self.pois['category'] == 'activity'], *self.grid)
+        return self._f_count_act
+
+    @property
+    def f_count_res(self):
+        if self._f_count_res is not None:
+            pass
+        else:
+            self._f_count_res = spatial_measures.grid_cell_pois_count(
+                self.pois[self.pois['category'] == 'residential'], *self.grid)
+        return self._f_count_res
+
+    @property
+    def f_kde_act(self):
+        if self._f_kde_act is not None:
+            pass
+        else:
+            self._f_kde_act = spatial_measures.grid_cell_kde_average(
+                self.kde['activity'].values)
+        return self._f_kde_act
+
+    @property
+    def f_kde_res(self):
+        if self._f_kde_res is not None:
+            pass
+        else:
+            self._f_kde_res = spatial_measures.grid_cell_kde_average(
+                self.kde['residential'].values)
+        return self._f_kde_res
+
+        # MEASURES
+
+    @property
+    def moran(self):
+        if self._moran:
+            pass
+        else:
+            xx, yy = self.grid
+            self._moran = {
+                'activity': spatial_measures.moran_index(self.f_count_act, xx, yy),
+                'residential': spatial_measures.moran_index(self.f_count_res, xx, yy)
+            }
+        return self._moran
+
+    @property
+    def entropy(self):
+        if self._entropy:
+            pass
+        else:
+            self._entropy = {
+                'activity': spatial_measures.shannon_entropy(self.f_kde_act),
+                'residential': spatial_measures.shannon_entropy(self.f_kde_res)
+            }
+        return self._entropy
+
+    @property
+    def relative_entropy(self):
+        if self._relative_entropy:
+            pass
+        else:
+            # could also be np.log(self.f_kde_res.size)
+            self._relative_entropy = {
+                'activity': self.entropy['activity'] / np.log(self.f_kde_act.size),
+                'residential': self.entropy['residential'] / np.log(self.f_kde_act.size)
+            }
+        return self._relative_entropy
+
+    # PERSISTENCE
+
+    def __getstate__(self):
+        result = self.__dict__.copy()
+        # do not pickle the data structures
+        del result['_pois']
+        del result['_kde']
+        del result['_graph']
+
+        # do not pickle the cached magnitude arrays
+        del result['_f_count_act']
+        del result['_f_count_res']
+        del result['_f_kde_act']
+        del result['_f_kde_res']
+
+        return result
+
+    # PLOTS
+    def scatter_pois(self, overlap=True, base_figsize=20):
+        plots.pois_scatter(self.pois, overlap=overlap,
+                           base_figsize=base_figsize)
