@@ -166,6 +166,6 @@ class Analysis(object):
         return result
 
     # PLOTS
-    def scatter_pois(self, overlap=True, base_figsize=20):
+    def scatter_pois(self, overlap=True, base_figsize=10):
         plots.pois_scatter(self.pois, overlap=overlap,
                            base_figsize=base_figsize)

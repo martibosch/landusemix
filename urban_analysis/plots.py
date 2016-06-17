@@ -7,15 +7,15 @@ import seaborn as sns
 def _category_scatter(x, y, title=None, label=None, scatter_kws=None, line_kws=None, ax=None):
     """
 
-    :param x: 
-    :param y: 
-    :param title: 
-    :param label: 
-    :param scatter_kws: 
-    :param line_kws: 
-    :param ax: 
-    :returns: 
-    :rtype: 
+    :param x:
+    :param y:
+    :param title:
+    :param label:
+    :param scatter_kws:
+    :param line_kws:
+    :param ax:
+    :returns:
+    :rtype:
 
     """
     if ax:
@@ -27,21 +27,21 @@ def _category_scatter(x, y, title=None, label=None, scatter_kws=None, line_kws=N
 
 
 def pois_scatter(pois, overlap=False, base_figsize=8, scatter_kws=None, line_kws=None, by=['category']):
-    """ 
+    """
 
-    :param pois: 
-    :param overlap: 
-    :param base_figsize: 
-    :param scatter_kws: 
-    :param line_kws: 
-    :param by: 
-    :returns: 
-    :rtype: 
+    :param pois:
+    :param overlap:
+    :param base_figsize:
+    :param scatter_kws:
+    :param line_kws:
+    :param by:
+    :returns:
+    :rtype:
 
     """
     category_gb = pois.groupby(by=by)
     if overlap:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(base_figsize, base_figsize))
         for label, df in category_gb:
             _category_scatter(df['lon'], df['lat'], title='pois', label=label,
                               scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
@@ -59,18 +59,18 @@ def pois_scatter(pois, overlap=False, base_figsize=8, scatter_kws=None, line_kws
 
 
 def pois_scatter_kde(pois, overlap=False, base_figsize=8, xlim=None, ylim=None, scatter_kws=None, line_kws=None, by=['category'], **kwargs):
-    """ 
+    """
 
-    :param pois: 
-    :param overlap: 
-    :param base_figsize: 
-    :param xlim: 
-    :param ylim: 
-    :param scatter_kws: 
-    :param line_kws: 
-    :param by: 
-    :returns: 
-    :rtype: 
+    :param pois:
+    :param overlap:
+    :param base_figsize:
+    :param xlim:
+    :param ylim:
+    :param scatter_kws:
+    :param line_kws:
+    :param by:
+    :returns:
+    :rtype:
 
     """
     category_gb = pois.groupby(by=by)
@@ -103,10 +103,10 @@ def pois_scatter_kde(pois, overlap=False, base_figsize=8, xlim=None, ylim=None, 
 def graph_centrality_kde(graph, centrality):
     """
 
-    :param GeoGraph graph: 
-    :param pandas.DataFrame centrality: 
-    :returns: 
-    :rtype: 
+    :param GeoGraph graph:
+    :param pandas.DataFrame centrality:
+    :returns:
+    :rtype:
 
     """
     cmap = plt.get_cmap('jet')
@@ -123,12 +123,12 @@ def graph_centrality_kde(graph, centrality):
 def plot_category_kde(category_kde, pois, xx, yy, category_label=None):
     """
 
-    :param pandas.DataFrame category_kde: 
-    :param pandas.DataFrame pois: 
-    :param numpy.array xx: 
-    :param numpy.array yy: 
-    :returns: 
-    :rtype: 
+    :param pandas.DataFrame category_kde:
+    :param pandas.DataFrame pois:
+    :param numpy.array xx:
+    :param numpy.array yy:
+    :returns:
+    :rtype:
 
     """
 
@@ -149,14 +149,14 @@ def plot_category_kde(category_kde, pois, xx, yy, category_label=None):
 
 
 def plot_categories_kde(categories_kde, pois, xx, yy):
-    """ 
+    """
 
-    :param dict categories_kde: 
-    :param pandas.DataFrame pois: 
-    :param numpy.array xx: 
-    :param numpy.array yy: 
-    :returns: 
-    :rtype: 
+    :param dict categories_kde:
+    :param pandas.DataFrame pois:
+    :param numpy.array xx:
+    :param numpy.array yy:
+    :returns:
+    :rtype:
 
     """
     n_rows = len(categories_kde)
