@@ -11,11 +11,12 @@ class Analysis(object):
 
     """
 
-    def __init__(self, city_ref, bbox, grid_step=.0015):
+    def __init__(self, city_ref, bbox, pois_shp_path=None, grid_step=.0015):
         super(Analysis, self).__init__()
         # basic info
         self.city_ref = city_ref
         self.bbox = bbox
+        self._pois_shp_path = None
         self._grid_step = grid_step
         self._grid = None  # utils.grid_from_bbox(bbox, grid_step)
 
@@ -43,7 +44,7 @@ class Analysis(object):
         if self._pois is not None:
             pass
         else:
-            self._pois = loaders.load_pois(self.city_ref)
+            self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
         return self._pois
 
     @property
