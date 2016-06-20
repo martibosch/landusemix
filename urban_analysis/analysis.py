@@ -16,7 +16,7 @@ class Analysis(object):
         # basic info
         self.city_ref = city_ref
         self.bbox = bbox
-        self._pois_shp_path = None
+        self._pois_shp_path = pois_shp_path
         self._grid_step = grid_step
         self._grid = None  # utils.grid_from_bbox(bbox, grid_step)
 
@@ -52,10 +52,7 @@ class Analysis(object):
         if self._kde is not None:
             pass
         else:
-            self._kde = loaders.load_grid_kde(
-                self.city_ref, self.pois, self.bbox, self._grid_step)
-            [self._kde.__setitem__(key[:key.find('_')], self._kde.pop(key))
-             for key in self._kde.keys()]
+            self._kde = loaders.load_grid_kde(self.city_ref, self.pois, self.bbox, self._grid_step)
         return self._kde
 
     @property
@@ -80,7 +77,7 @@ class Analysis(object):
     def grid_step(self):
         return self._grid_step
 
-    @grid_setter.setter
+    @grid_step.setter
     def grid_step(self, value):
         if value != self._grid_step:
             self._grid_step = value
