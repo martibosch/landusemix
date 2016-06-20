@@ -76,6 +76,25 @@ class Analysis(object):
         return self._grid
 
     @property
+    def grid_step(self):
+        return self._grid_step
+
+    @grid_setter.setter
+    def grid_step(self, value):
+        if value != self._grid_step:
+            self._grid_step = value
+            # not valid anymore:
+            self._grid = None
+            self._kde = None
+            self._moran = None
+            self._entropy = None
+            self._relative_entropy = None
+            self._f_count_act = None
+            self._f_count_res = None
+            self._f_kde_act = None
+            self._f_kde_res = None
+
+    @property
     def f_count_act(self):
         if self._f_count_act is not None:
             pass
