@@ -17,7 +17,7 @@ OSM_POIS_KEYS = ['osm_pois']
 # OSM_EXTRACTED_POIS_KEYS = ['activities', 'residential']
 POIS_KEYS = ['pois']
 GRAPH_KDE_KEYS = ['graph_kde']
-GRID_KDE_KEYS = ['activity', 'residential', 'total']
+GRID_KDE_KEYS = ['activity', 'residential']  # , 'total']
 
 
 # CUSTOM EXCEPTION
@@ -197,4 +197,4 @@ def load_grid_kde(city_ref, pois=None, bbox=None, grid_step=.0015):
     :rtype: pandas.DataFrame
 
     """
-    return _load_data(city_ref, GRID_KDE_KEYS, kde.get_grid_all_kde, [pois, bbox, grid_step])
+    return _load_data(city_ref,  list(map(lambda s: s + '_' + str(grid_step).replace('.', '_'), GRID_KDE_KEYS)), kde.get_grid_all_kde, [pois, bbox, grid_step])
