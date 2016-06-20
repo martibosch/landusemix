@@ -3,6 +3,7 @@ import numpy as np
 import loaders
 import plots
 import spatial_measures
+import lu_mix
 import utils
 
 
@@ -30,12 +31,14 @@ class Analysis(object):
         self._moran = None
         self._entropy = None
         self._relative_entropy = None
+        self._lu_mix = None
 
         # stuff to cache
         self._f_count_act = None
         self._f_count_res = None
         self._f_kde_act = None
         self._f_kde_res = None
+        self._f_lu_mix_grid = None
 
     # STORED DATA STRUCTURES
 
@@ -87,10 +90,20 @@ class Analysis(object):
             self._moran = None
             self._entropy = None
             self._relative_entropy = None
+            self._lu_mix = None
+            self._f_lu_mix_grid = None
             self._f_count_act = None
             self._f_count_res = None
             self._f_kde_act = None
-            self._f_kde_res = None
+            self._f_kde_res = None            
+            
+    @property
+    def f_lu_mix_grid(self):
+        if self._f_lu_mix_grid is not None:
+            pass
+        else:
+            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res)
+        return self._f_lu_mix_grid
 
     @property
     def f_count_act(self):
@@ -115,8 +128,7 @@ class Analysis(object):
         if self._f_kde_act is not None:
             pass
         else:
-            self._f_kde_act = spatial_measures.grid_cell_kde_average(
-                self.kde['activity'].values)
+            self._f_kde_act = spatial_measures.grid_cell_kde_average(self.kde['activity'].values)
         return self._f_kde_act
 
     @property
@@ -124,11 +136,10 @@ class Analysis(object):
         if self._f_kde_res is not None:
             pass
         else:
-            self._f_kde_res = spatial_measures.grid_cell_kde_average(
-                self.kde['residential'].values)
+            self._f_kde_res = spatial_measures.grid_cell_kde_average(self.kde['residential'].values)
         return self._f_kde_res
 
-        # MEASURES
+    # MEASURES
 
     @property
     def moran(self):
@@ -141,6 +152,14 @@ class Analysis(object):
                 'residential': spatial_measures.moran_index(self.f_count_res, xx, yy)
             }
         return self._moran
+    
+    @property
+    def lu_mix(self):
+        if self._lu_mix:
+            pass
+        else:
+            self._lu_mix = lu_mix.compute_phi(self.f_lu_mix_grid)
+        return self._lu_mix
 
     @property
     def entropy(self):
@@ -179,6 +198,7 @@ class Analysis(object):
         del result['_f_count_res']
         del result['_f_kde_act']
         del result['_f_kde_res']
+        del result['_f_lu_mix_grid']
 
         return result
 

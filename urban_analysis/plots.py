@@ -181,3 +181,15 @@ def plot_categories_kde(categories_kde, pois, xx, yy):
         ax2.w_xaxis.set_ticklabels([])
         ax2.w_yaxis.set_ticklabels([])
         ax2.w_zaxis.set_ticklabels([])
+
+
+def plot_(xx, yy, grid, label, figsize = (12, 8)):
+    """ Plot the input grid
+    """
+    w,h = figsize
+    fig = plt.figure(figsize=(w,h))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(xx[:-1,:-1], yy[:-1,:-1], grid, cmap=cm.RdYlBu)
+    ax.set_xlabel('lon')
+    ax.set_ylabel('lat')
+    ax.set_zlabel(label)
