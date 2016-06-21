@@ -22,7 +22,7 @@ def read_shp_dbf(file_shape):
     return shapes, pd.DataFrame(reader_shp.records(), columns=columns)
 
 
-def get_extracted_osm_points(shp_file_path):
+def get_extracted_osm_points(shp_file_path, city_ref = None):
     """ Loads the extracted points of interest
 
     :param str shp_file_path: 
@@ -30,7 +30,10 @@ def get_extracted_osm_points(shp_file_path):
     :rtype: pandas.DataFrame
 
     """
-    # TODO: assert that shp_file exists
+    import extract_uses.extract_uses as extract_uses
+    import os
+    if (not(os.path.isfile(shp_file_path))):
+        extract_uses.process_city(city_ref)
     shapes, df = read_shp_dbf(shp_file_path)
 
     # Get longitude and latitude

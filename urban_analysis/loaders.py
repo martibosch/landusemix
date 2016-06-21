@@ -168,7 +168,7 @@ def load_pois(city_ref, pois_shp_path=None):
     """    
     try:
         return _load_data(city_ref, POIS_KEYS,
-                          shp_loader.get_extracted_osm_points, [pois_shp_path])
+                          shp_loader.get_extracted_osm_points, [pois_shp_path, city_ref])
     except shp_loader.PoisShpDoesNotExist:
         print('%s does not exist. You might try to load OSM pois instead through `load_osm_pois`.' % pois_shp_path)
 

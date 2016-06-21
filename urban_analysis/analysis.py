@@ -5,6 +5,7 @@ import plots
 import spatial_measures
 import lu_mix
 import utils
+import extract_uses.utils
 
 
 class Analysis(object):
@@ -12,14 +13,17 @@ class Analysis(object):
 
     """
 
-    def __init__(self, city_ref, bbox, pois_shp_path=None, grid_step=.0015):
+    def __init__(self, city_ref, bbox=None, pois_shp_path=None, grid_step=.0015):
         super(Analysis, self).__init__()
         # basic info
         self.city_ref = city_ref
-        self.bbox = bbox
+        if bbox is None:
+            self.bbox = extract_uses.utils.getBoundingBox(pois_shp_path)
+        else:
+            self.bbox = bbox
         self._pois_shp_path = pois_shp_path
         self._grid_step = grid_step
-        self._grid = None  # utils.grid_from_bbox(bbox, grid_step)
+        self._grid = None
 
         # data
         self._pois = None
@@ -48,6 +52,8 @@ class Analysis(object):
             pass
         else:
             self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
+        if (self.bbox is None): # If bounding box is not set
+            self.bbox = extract_uses.utils.getBoundingBox(self._pois_shp_path)
         return self._pois
 
     @property

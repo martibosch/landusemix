@@ -174,7 +174,7 @@ def download_unzip(citiesFolder, city_download):
 	import zipfile
 	import os
 	# Get filename: temporary
-	fname = citiesFolder+"temp.zip"
+	fname = citiesFolder+city_download+".zip"
 	# Download zip file corresponding to city
 	testfile = urllib.URLopener()
 	testfile.retrieve(city_download, fname)
@@ -211,6 +211,10 @@ def getBoundingBox(point_shapefile, polygon_shapefile = None , line_shapefile = 
 	return: bbox -> latitude1 , longitude1 , latitude2, longitude2
 	"""
 	# Get the bounding box for the given shapefiles
+	if ((point_shapefile is None) or (not(os.path.isfile(point_shapefile)))):
+		#print('Warning: Null shapefile or file does not exist')
+		return None
+
 	bbox_pts = shapefile.Reader(point_shapefile).bbox
 	if (polygon_shapefile != None):
 		bbox_poly = shapefile.Reader(polygon_shapefile).bbox

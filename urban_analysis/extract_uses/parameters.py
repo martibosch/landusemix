@@ -43,9 +43,14 @@ fn_activities_final = fn_prefix+fn_final_clasif+fn_activities
 # Final file containing both activities and residential points
 fn_joinResiActiv = fn_prefix+fn_final_clasif+"uses"
 
+citiesFolder = 'cities/'
+
 # Set input files
-def setInputFiles(citiesFolder, city_country, popu_count_file = None, numberOfCuts = 4):
+def setInputFiles(city_country, popu_count_file = None, numberOfCuts = 4):
 	global fn_prefix, city_name, fn_residential_final, fn_activities_final, point_shapefile, polygon_shapefile, prj_shapefile, population_count_file, numCuts, fn_final_clasif, fn_residential, fn_activities, fn_joinResiActiv
+	import os
+	if ((popu_count_file != None) and (not(os.path.isfile(popu_count_file)))):
+		popu_count_file = None
 
 	city_name = city_country
 	fn_prefix = citiesFolder+city_country+'/'
