@@ -23,15 +23,15 @@ def metric_phi(x,y):
     #return (1 - ( abs(x-y)**0.5 ) ) * max(x,y)
 
 def metric_phi_entropy(x,y):
-	""" Phi entropy metric. Based on paper "Comparing measures of urban land use mix, 2013"
-	"""
+    """ Phi entropy metric. Based on paper "Comparing measures of urban land use mix, 2013"
+    """
     import math
     #https://www.wolframalpha.com/input/?i=plot+z+%3D+-+(+(+x*ln(x)+)+%2B+(+y*ln(y)+)+)+%2F+ln(2),+x%3D0..1
     return - ( ( x*math.log(x) ) + ( y*math.log(y) ) ) / math.log(2)
 
 def metric_phi_balance_index(x,y):
-	""" Phi balance index metric. Based on paper "Comparing measures of urban land use mix, 2013"
-	"""
+    """ Phi balance index metric. Based on paper "Comparing measures of urban land use mix, 2013"
+    """
     #https://www.wolframalpha.com/input/?i=plot+z%3D+1-+(abs(x-y))%2F(x%2By)+,+x%3D0..1
     return 1 - (abs(x-y))/(x+y)
 

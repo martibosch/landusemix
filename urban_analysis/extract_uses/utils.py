@@ -174,7 +174,7 @@ def download_unzip(citiesFolder, city_download):
 	import zipfile
 	import os
 	# Get filename: temporary
-	fname = citiesFolder+city_download+".zip"
+	fname = citiesFolder+"temp.zip"
 	# Download zip file corresponding to city
 	testfile = urllib.URLopener()
 	testfile.retrieve(city_download, fname)

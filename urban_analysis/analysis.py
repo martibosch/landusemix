@@ -52,8 +52,8 @@ class Analysis(object):
             pass
         else:
             self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
-        if (self.bbox is None): # If bounding box is not set
-            self.bbox = extract_uses.utils.getBoundingBox(self._pois_shp_path)
+        #if (self.bbox is None): # If bounding box is not set
+        #    self.bbox = extract_uses.utils.getBoundingBox(self._pois_shp_path)
         return self._pois
 
     @property
