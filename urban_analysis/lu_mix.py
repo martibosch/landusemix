@@ -23,7 +23,8 @@ def metric_phi(x,y):
     #return (1 - ( abs(x-y)**0.5 ) ) * max(x,y)
 
 def metric_phi_entropy(x,y):
-    """ Phi entropy metric. Based on paper "Comparing measures of urban land use mix, 2013"
+    """ Shannon (diversity) index
+    Phi entropy metric. Based on paper "Comparing measures of urban land use mix, 2013"
     """
     import math
     #https://www.wolframalpha.com/input/?i=plot+z+%3D+-+(+(+x*ln(x)+)+%2B+(+y*ln(y)+)+)+%2F+ln(2),+x%3D0..1
@@ -34,6 +35,23 @@ def metric_phi_balance_index(x,y):
     """
     #https://www.wolframalpha.com/input/?i=plot+z%3D+1-+(abs(x-y))%2F(x%2By)+,+x%3D0..1
     return 1 - (abs(x-y))/(x+y)
+
+def metric_phi_true_diversity_index(x,y):
+	""" True diversity index
+	https://en.wikipedia.org/wiki/Diversity_index
+	"""
+	q = 0.5
+	return (x**q + y**q )** (1/(1-q))
+
+def metric_phi_generalized_entropy_alpha(x,y):
+	""" Renyi's generalized entropy of order alpha
+	Detection of landscape heterogeneity at multiple scales: Use of the quadratic entropy index, 2016
+	H_alpha
+	"""
+	import math
+	alpha_entropy_order = -2
+	return math.log(x**alpha_entropy_order+y**alpha_entropy_order) / 1 - alpha_entropy_order
+	#return 100 - ( math.log(x**alpha_entropy_order+y**alpha_entropy_order) / 1 - alpha_entropy_order )
 
 def compute_landuse_mix_grid(kde_activities, kde_residential, phi_metric = 'phi_entropy'):
 	""" Computes the land use mix grid given residential and activities KDE's
@@ -57,7 +75,7 @@ def compute_landuse_mix_grid(kde_activities, kde_residential, phi_metric = 'phi_
 	rows, cols = lu_mix.shape[0] , lu_mix.shape[1]
 
 	# Set function to compute
-	function_phi = {'phi_entropy' : metric_phi_entropy, 'phi' : metric_phi, 'phi_balance_index' : metric_phi_balance_index }
+	function_phi = {'phi_entropy' : metric_phi_entropy, 'phi' : metric_phi, 'phi_balance_index' : metric_phi_balance_index, 'phi_generalized_entropy_alpha' : metric_phi_generalized_entropy_alpha, 'phi_true_diversity' : metric_phi_true_diversity_index}
 	compute_phi = function_phi[phi_metric]
 
 	for i in range(rows): #Rows
