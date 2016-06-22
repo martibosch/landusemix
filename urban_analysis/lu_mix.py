@@ -1,17 +1,24 @@
 import numpy as np
 
 USE_normalise_kde = True
+normalisation_max = False
+
 USE_normalise_lu_grid = False
 
 def normalise_kde(np_kde):
 	""" Input: Numpy matrix of the KDE
-	Normalise the gridded KDE; Sum(elements) = 1
+	Depending on normalisation_max parameter:
+	1) Normalise the gridded KDE; Sum(elements) = 1
+	2) Divide by its maximum value. All values are within [0,1]
 	"""
 	### Normalise to [0,1] all cells of KDE; sum(elements) = 1
 	def applyDiv(x,total):
 	    return x/total
 	applyNormalisation = np.vectorize(applyDiv)
-	norm_kde = applyNormalisation(np_kde, np_kde.sum())
+	if (normalisation_max):
+		norm_kde = applyNormalisation(np_kde, np_kde.max())
+	else:
+		norm_kde = applyNormalisation(np_kde, np_kde.sum())
 	return norm_kde
 
 def metric_phi(x,y):
@@ -53,6 +60,18 @@ def metric_phi_generalized_entropy_alpha(x,y):
 	return math.log(x**alpha_entropy_order+y**alpha_entropy_order) / 1 - alpha_entropy_order
 	#return 100 - ( math.log(x**alpha_entropy_order+y**alpha_entropy_order) / 1 - alpha_entropy_order )
 
+def metric_phi_sorensen(x,y):
+	#https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient
+	return (2*(min(x,y)) ) / (x+y)
+def metric_phi_jaccard(x,y):
+	#https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient
+	return (2*x*y) / (x*x+y*y)
+
+# Define metrics
+function_phi = {'phi_jaccard' : metric_phi_jaccard, 'phi_sorensen' : metric_phi_sorensen, 'phi_entropy' : metric_phi_entropy, 'phi' : metric_phi, 'phi_balance_index' : metric_phi_balance_index, 'phi_generalized_entropy_alpha' : metric_phi_generalized_entropy_alpha, 'phi_true_diversity' : metric_phi_true_diversity_index}
+def get_phi_metrics():
+	return function_phi.keys()
+
 def compute_landuse_mix_grid(kde_activities, kde_residential, phi_metric = 'phi_entropy'):
 	""" Computes the land use mix grid given residential and activities KDE's
 	phi_metric defines the metric used to evaluate the mixity for each grid
@@ -75,7 +94,6 @@ def compute_landuse_mix_grid(kde_activities, kde_residential, phi_metric = 'phi_
 	rows, cols = lu_mix.shape[0] , lu_mix.shape[1]
 
 	# Set function to compute
-	function_phi = {'phi_entropy' : metric_phi_entropy, 'phi' : metric_phi, 'phi_balance_index' : metric_phi_balance_index, 'phi_generalized_entropy_alpha' : metric_phi_generalized_entropy_alpha, 'phi_true_diversity' : metric_phi_true_diversity_index}
 	compute_phi = function_phi[phi_metric]
 
 	for i in range(rows): #Rows
@@ -96,6 +114,5 @@ def compute_phi(lu_mix_grid):
 	% of ...
 	
 	"""
-	phi = lu_mix_grid.sum()
-
+	phi = lu_mix_grid.sum() / ( lu_mix_grid.shape[0]*lu_mix_grid.shape[1] )
 	return phi

@@ -30,6 +30,9 @@ class Analysis(object):
         self._kde = None
         self._graph = None
         # self.graph_centrality = None
+        
+        # parameters
+        self._phi_metric = 'phi_entropy'
 
         # indicators
         self._moran = None
@@ -108,7 +111,7 @@ class Analysis(object):
         if self._f_lu_mix_grid is not None:
             pass
         else:
-            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res)
+            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res, self._phi_metric)
         return self._f_lu_mix_grid
 
     @property
