@@ -176,6 +176,24 @@ def relative_entropy(f):
     """
     return shannon_entropy(f) / np.log(f.size)
 
+def dissimilarity(f_k, f_l):
+    """
+
+    :param numpy.ndarray f_k: 2-dimensional array
+    :param numpy.ndarray f_l: 2-dimensional array
+    :returns: 
+    :rtype: 
+
+    """
+    _f_k = f_k.flatten()
+    _f_l = f_l.flatten()
+    F_k = _f_k.sum()
+    F_l = _f_l.sum()
+    total = 0
+    for f_ik, f_il in zip(_f_k, _f_l):
+        total += abs((f_ik / F_k - f_il / F_l)) / (f_ik / F_k + f_il / F_l)
+    return .5 * total
+
 
 # def calculate_measure(measure_key, measure_pre, **kwargs):
 
