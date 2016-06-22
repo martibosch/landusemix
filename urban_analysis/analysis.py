@@ -31,6 +31,9 @@ class Analysis(object):
         self._graph = None
         # self.graph_centrality = None
 
+        # parameters
+        self._phi_metric = 'phi_entropy'
+
         # indicators
         self._moran = None
         self._entropy = None
