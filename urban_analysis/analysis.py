@@ -36,6 +36,8 @@ class Analysis(object):
         self._entropy = None
         self._relative_entropy = None
         self._lu_mix = None
+        self._dissimilarity = None
+        self._kde_dissimilarity = None
 
         # stuff to cache
         self._f_count_act = None
@@ -52,7 +54,7 @@ class Analysis(object):
             pass
         else:
             self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
-        #if (self.bbox is None): # If bounding box is not set
+        # if (self.bbox is None): # If bounding box is not set
         #    self.bbox = extract_uses.utils.getBoundingBox(self._pois_shp_path)
         return self._pois
 
@@ -61,7 +63,8 @@ class Analysis(object):
         if self._kde is not None:
             pass
         else:
-            self._kde = loaders.load_grid_kde(self.city_ref, self.pois, self.bbox, self._grid_step)
+            self._kde = loaders.load_grid_kde(
+                self.city_ref, self.pois, self.bbox, self._grid_step)
         return self._kde
 
     @property
@@ -97,18 +100,21 @@ class Analysis(object):
             self._entropy = None
             self._relative_entropy = None
             self._lu_mix = None
+            self._dissimilarity = None
+            self._kde_dissimilarity = None
             self._f_lu_mix_grid = None
             self._f_count_act = None
             self._f_count_res = None
             self._f_kde_act = None
-            self._f_kde_res = None            
-            
+            self._f_kde_res = None
+
     @property
     def f_lu_mix_grid(self):
         if self._f_lu_mix_grid is not None:
             pass
         else:
-            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res)
+            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(
+                self.f_kde_act, self.f_kde_res)
         return self._f_lu_mix_grid
 
     @property
@@ -134,7 +140,8 @@ class Analysis(object):
         if self._f_kde_act is not None:
             pass
         else:
-            self._f_kde_act = spatial_measures.grid_cell_kde_average(self.kde['activity'].values)
+            self._f_kde_act = spatial_measures.grid_cell_kde_average(
+                self.kde['activity'].values)
         return self._f_kde_act
 
     @property
@@ -142,7 +149,8 @@ class Analysis(object):
         if self._f_kde_res is not None:
             pass
         else:
-            self._f_kde_res = spatial_measures.grid_cell_kde_average(self.kde['residential'].values)
+            self._f_kde_res = spatial_measures.grid_cell_kde_average(
+                self.kde['residential'].values)
         return self._f_kde_res
 
     # MEASURES
@@ -158,7 +166,7 @@ class Analysis(object):
                 'residential': spatial_measures.moran_index(self.f_count_res, xx, yy)
             }
         return self._moran
-    
+
     @property
     def lu_mix(self):
         if self._lu_mix:
@@ -190,6 +198,24 @@ class Analysis(object):
             }
         return self._relative_entropy
 
+    @property
+    def dissimilarity(self):
+        if self._dissimilarity:
+            pass
+        else:
+            self._dissimilarity = spatial_measures.dissimilarity(
+                self.f_count_act, self.f_count_res)
+        return self._dissimilarity
+
+    @property
+    def kde_dissimilarity(self):
+        if self._kde_dissimilarity:
+            pass
+        else:
+            self._kde_dissimilarity = spatial_measures.dissimilarity(
+                self.f_kde_act, self.f_kde_res)
+        return self._kde_dissimilarity
+
     # PERSISTENCE
 
     def __getstate__(self):
@@ -207,6 +233,8 @@ class Analysis(object):
         del result['_f_lu_mix_grid']
 
         return result
+
+    # TODO: to_pickle method
 
     # PLOTS
     def scatter_pois(self, overlap=True, base_figsize=10):

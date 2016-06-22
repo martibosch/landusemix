@@ -29,24 +29,24 @@ def get_midpoint_grid(xx, yy):
     return np.array([[s + (t - s) / 2.0 for s, t in zip(x0, x0[1:])] for i in range(len(xx) - 1)]), np.array([[s + (t - s) / 2.0 for s, t in zip(y0, y0[1:])] for i in range(len(yy.T) - 1)]).T
 
 
-def grid_cell_kde_average(f):
+def grid_cell_kde_average(psi):
     """ Determines for each cell the trapezoid-based average out of the kde values of the cell's vertices
 
-    :param numpy.ndarray f: 2-dimensional
+    :param numpy.ndarray psi: 2-dimensional array with kde values at each point of the grid
     :returns: 2-dimensional array
     :rtype: numpy.ndarray 
 
     """
-    ff = []
-    for i in range(len(f) - 1):
+    f = []
+    for i in range(len(psi) - 1):
         fi = []
-        f_row1 = f[i]
-        f_row2 = f[i + 1]
-        for j in range(len(f[0]) - 1):
-            fi.append((f_row1[j] + f_row1[j + 1] +
-                       f_row2[j] + f_row2[j + 1]) / 4)
-        ff.append(fi)
-    return np.array(ff)
+        psi_row1 = psi[i]
+        psi_row2 = psi[i + 1]
+        for j in range(len(psi[0]) - 1):
+            fi.append((psi_row1[j] + psi_row1[j + 1] +
+                       psi_row2[j] + psi_row2[j + 1]) / 4)
+        f.append(fi)
+    return np.array(f)
 
 
 def grid_cell_pois_count(pois, xx, yy):
@@ -59,7 +59,7 @@ def grid_cell_pois_count(pois, xx, yy):
     :rtype: numpy.ndarray
 
     """
-    ff = []
+    f = []
     n_rows, n_cols = xx.shape
     for i in range(n_rows - 1):
         fi = []
@@ -69,8 +69,8 @@ def grid_cell_pois_count(pois, xx, yy):
         for j in range(n_cols - 1):
             fi.append(len(pois[(pois['lon'] > xi[j]) & (pois['lon'] <= xi[j + 1]) & (
                 pois['lat'] > yil[j]) & (pois['lat'] <= yih[j])]))
-        ff.append(fi)
-    return np.array(ff)
+        f.append(fi)
+    return np.array(f)
 
 # INDICATOR CALCULATION
 
@@ -176,6 +176,7 @@ def relative_entropy(f):
     """
     return shannon_entropy(f) / np.log(f.size)
 
+
 def dissimilarity(f_k, f_l):
     """
 
@@ -187,32 +188,42 @@ def dissimilarity(f_k, f_l):
     """
     _f_k = f_k.flatten()
     _f_l = f_l.flatten()
-    F_k = _f_k.sum()
-    F_l = _f_l.sum()
+    F_k = float(_f_k.sum())  # float to avoid 0 division
+    F_l = float(_f_l.sum())
     total = 0
     for f_ik, f_il in zip(_f_k, _f_l):
-        total += abs((f_ik / F_k - f_il / F_l)) / (f_ik / F_k + f_il / F_l)
+        total += abs(f_ik / F_k - f_il / F_l)
     return .5 * total
 
 
-# def calculate_measure(measure_key, measure_pre, **kwargs):
+# def kde_dissimilarity(psi_k, psi_l):
+#     """
 
-#     try:
-#         if measure_pre == 'kde':
-#             ff = grid_cell_kde_average(kwargs['f'])
-#         if measure_pre == 'count':
-#             ff = grid_cell_pois_count(
-#                 kwargs['pois'], kwargs['xx'], kwargs['yy'])
-#     except KeyError:
-#         raise Exception, 'Wrong arguments'
+#     :param psi_k:
+#     :param psi_l:
+#     :returns:
+#     :rtype:
 
-#     MEASURE_METHOD_MAPPING = {
-#         'geary': geary_index,
-#         'moran': moran_index,
-#         'entropy': relative_entropy
-#     }
+#     """
 
-#     return MEASURE_METHOD_MAPPING[measure_key](ff)
+    # def calculate_measure(measure_key, measure_pre, **kwargs):
+
+    #     try:
+    #         if measure_pre == 'kde':
+    #             ff = grid_cell_kde_average(kwargs['f'])
+    #         if measure_pre == 'count':
+    #             ff = grid_cell_pois_count(
+    #                 kwargs['pois'], kwargs['xx'], kwargs['yy'])
+    #     except KeyError:
+    #         raise Exception, 'Wrong arguments'
+
+    #     MEASURE_METHOD_MAPPING = {
+    #         'geary': geary_index,
+    #         'moran': moran_index,
+    #         'entropy': relative_entropy
+    #     }
+
+    #     return MEASURE_METHOD_MAPPING[measure_key](ff)
 
     # def pois_grid_cell_count(pois, xx, yy, step=None):
     #     # assume regular squared grid

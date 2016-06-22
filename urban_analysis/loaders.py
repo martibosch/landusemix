@@ -165,7 +165,7 @@ def load_pois(city_ref, pois_shp_path=None):
     :returns: pois with the columns 'key', 'value', 'lon' (longitude), 'lat' (latitude) and 'cat'
     :rtype: pandas.DataFrame
 
-    """    
+    """
     try:
         return _load_data(city_ref, POIS_KEYS,
                           shp_loader.get_extracted_osm_points, [pois_shp_path, city_ref])
@@ -197,6 +197,8 @@ def load_grid_kde(city_ref, pois=None, bbox=None, grid_step=.0015):
     :rtype: dict
 
     """
-    kde_dict = _load_data(city_ref,  list(map(lambda s: s + '_' + str(grid_step).replace('.', '_'), GRID_KDE_KEYS)), kde.get_grid_all_kde, [pois, bbox, grid_step])
-    [kde_dict.__setitem__(key[:key.find('_')], self._kde.pop(key)) for key in kde_dict.keys() if '_' in key]
+    kde_dict = _load_data(city_ref,  list(map(lambda s: s + '_' + str(grid_step).replace(
+        '.', '_'), GRID_KDE_KEYS)), kde.get_grid_all_kde, [pois, bbox, grid_step])
+    [kde_dict.__setitem__(key[:key.find('_')], kde_dict.pop(key))
+     for key in kde_dict.keys() if '_' in key]
     return kde_dict
