@@ -7,7 +7,6 @@ import statsmodels.nonparametric.api as smnp
 
 import utils
 
-
 def _kde(x, y, grid):
     """Compute a bivariate kde using statsmodels. Based on https://github.com/mwaskom/seaborn/blob/master/seaborn/distributions.py
 
@@ -18,20 +17,23 @@ def _kde(x, y, grid):
     :rtype: numpy.ndarray
 
     """
-
-    bw_func = smnp.bandwidths.bw_scott  # scott
-    # bw_func = smnp.bandwidths.bw_silverman #silverman
-    print('Bw func X', bw_func(x))
-    print('Bw func Y', bw_func(y))
-    # Test bw = 0.2 ?
-
-    # TODO: Check other option; normal_reference: normal reference rule of
-    # thumb (default), cv_ml: cross validation maximum likelihood, cv_ls:
-    # cross validation least squares
+    
+    """
+    if (kde_option == 1):#scott
+        bw_func = smnp.bandwidths.bw_scott 
+    if (kde_option == 2):#silverman   
+        bw_func = smnp.bandwidths.bw_silverman 
+    #normal_reference: normal reference rule of thumb (default), cv_ml: cross validation maximum likelihood, cv_ls: cross validation least squares
+    if (kde_option <= 2):
+        kde = smnp.KDEMultivariate([x, y], "cc", [bw_func(x), bw_func(y)])
+    if (kde_option == 3):
+        kde = smnp.KDEMultivariate([x, y], "cc", 'cv_ml')
+    if (kde_option == 4):
+        kde = smnp.KDEMultivariate([x, y], "cc", 'cv_ls')
+    """
+    bw_func = smnp.bandwidths.bw_scott
     kde = smnp.KDEMultivariate([x, y], "cc", [bw_func(x), bw_func(y)])
-    #kde = smnp.KDEMultivariate([x, y], "cc", 'cv_ml')
-    #kde = smnp.KDEMultivariate([x, y], "cc", 'cv_ls')
-
+    
     return kde.pdf([grid[0].ravel(), grid[1].ravel()]).reshape(grid[0].shape)
 
 

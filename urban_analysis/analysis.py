@@ -3,7 +3,9 @@ import numpy as np
 import loaders
 import plots
 import spatial_measures
+import lu_mix
 import utils
+import extract_uses.utils
 
 
 class Analysis(object):
@@ -11,14 +13,17 @@ class Analysis(object):
 
     """
 
-    def __init__(self, city_ref, bbox, pois_shp_path=None, grid_step=.0015):
+    def __init__(self, city_ref, bbox=None, pois_shp_path=None, grid_step=.0015):
         super(Analysis, self).__init__()
         # basic info
         self.city_ref = city_ref
-        self.bbox = bbox
-        self._pois_shp_path = None
+        if bbox is None:
+            self.bbox = extract_uses.utils.getBoundingBox(pois_shp_path)
+        else:
+            self.bbox = bbox
+        self._pois_shp_path = pois_shp_path
         self._grid_step = grid_step
-        self._grid = None  # utils.grid_from_bbox(bbox, grid_step)
+        self._grid = None
 
         # data
         self._pois = None
@@ -30,12 +35,14 @@ class Analysis(object):
         self._moran = None
         self._entropy = None
         self._relative_entropy = None
+        self._lu_mix = None
 
         # stuff to cache
         self._f_count_act = None
         self._f_count_res = None
         self._f_kde_act = None
         self._f_kde_res = None
+        self._f_lu_mix_grid = None
 
     # STORED DATA STRUCTURES
 
@@ -45,6 +52,8 @@ class Analysis(object):
             pass
         else:
             self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
+        #if (self.bbox is None): # If bounding box is not set
+        #    self.bbox = extract_uses.utils.getBoundingBox(self._pois_shp_path)
         return self._pois
 
     @property
@@ -52,10 +61,7 @@ class Analysis(object):
         if self._kde is not None:
             pass
         else:
-            self._kde = loaders.load_grid_kde(
-                self.city_ref, self.pois, self.bbox, self._grid_step)
-            [self._kde.__setitem__(key[:key.find('_')], self._kde.pop(key))
-             for key in self._kde.keys()]
+            self._kde = loaders.load_grid_kde(self.city_ref, self.pois, self.bbox, self._grid_step)
         return self._kde
 
     @property
@@ -80,7 +86,7 @@ class Analysis(object):
     def grid_step(self):
         return self._grid_step
 
-    @grid_setter.setter
+    @grid_step.setter
     def grid_step(self, value):
         if value != self._grid_step:
             self._grid_step = value
@@ -90,10 +96,20 @@ class Analysis(object):
             self._moran = None
             self._entropy = None
             self._relative_entropy = None
+            self._lu_mix = None
+            self._f_lu_mix_grid = None
             self._f_count_act = None
             self._f_count_res = None
             self._f_kde_act = None
-            self._f_kde_res = None
+            self._f_kde_res = None            
+            
+    @property
+    def f_lu_mix_grid(self):
+        if self._f_lu_mix_grid is not None:
+            pass
+        else:
+            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res)
+        return self._f_lu_mix_grid
 
     @property
     def f_count_act(self):
@@ -118,8 +134,7 @@ class Analysis(object):
         if self._f_kde_act is not None:
             pass
         else:
-            self._f_kde_act = spatial_measures.grid_cell_kde_average(
-                self.kde['activity'].values)
+            self._f_kde_act = spatial_measures.grid_cell_kde_average(self.kde['activity'].values)
         return self._f_kde_act
 
     @property
@@ -127,11 +142,10 @@ class Analysis(object):
         if self._f_kde_res is not None:
             pass
         else:
-            self._f_kde_res = spatial_measures.grid_cell_kde_average(
-                self.kde['residential'].values)
+            self._f_kde_res = spatial_measures.grid_cell_kde_average(self.kde['residential'].values)
         return self._f_kde_res
 
-        # MEASURES
+    # MEASURES
 
     @property
     def moran(self):
@@ -144,6 +158,14 @@ class Analysis(object):
                 'residential': spatial_measures.moran_index(self.f_count_res, xx, yy)
             }
         return self._moran
+    
+    @property
+    def lu_mix(self):
+        if self._lu_mix:
+            pass
+        else:
+            self._lu_mix = lu_mix.compute_phi(self.f_lu_mix_grid)
+        return self._lu_mix
 
     @property
     def entropy(self):
@@ -182,6 +204,7 @@ class Analysis(object):
         del result['_f_count_res']
         del result['_f_kde_act']
         del result['_f_kde_res']
+        del result['_f_lu_mix_grid']
 
         return result
 
