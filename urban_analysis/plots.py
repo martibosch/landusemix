@@ -182,7 +182,19 @@ def plot_categories_kde(categories_kde, pois, xx, yy):
         ax2.w_yaxis.set_ticklabels([])
         ax2.w_zaxis.set_ticklabels([])
 
-
+def plot_contour(xx, yy, grid, label, figsize=(12, 8)):
+    """ Contour plot
+    TODO: Smooth contour filling
+    """
+    w,h = figsize
+    plt.figure(figsize=(w,h))
+    cp = plt.contourf(xx[:-1,:-1], yy[:-1,:-1], grid, cmap=plt.get_cmap('Blues'))
+    plt.colorbar(cp)
+    plt.title(label)
+    plt.xlabel('Lon')
+    plt.ylabel('Lat')
+    plt.show()
+        
 def plot_(xx, yy, grid, label, figsize = (12, 8)):
     """ Plot the input grid
     """
@@ -190,6 +202,6 @@ def plot_(xx, yy, grid, label, figsize = (12, 8)):
     fig = plt.figure(figsize=(w,h))
     ax = fig.add_subplot(111, projection='3d')
     ax.plot_surface(xx[:-1,:-1], yy[:-1,:-1], grid, cmap=cm.RdYlBu)
-    ax.set_xlabel('lon')
-    ax.set_ylabel('lat')
+    ax.set_xlabel('Lon')
+    ax.set_ylabel('Lat')
     ax.set_zlabel(label)
