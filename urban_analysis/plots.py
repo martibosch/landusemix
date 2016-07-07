@@ -26,7 +26,7 @@ def _category_scatter(x, y, title=None, label=None, scatter_kws=None, line_kws=N
     return sns.regplot(x, y, fit_reg=False, label=label, scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
 
 
-def pois_scatter(pois, overlap=False, base_figsize=8, scatter_kws=None, line_kws=None, by=['category']):
+def pois_scatter(pois, overlap=False, base_figsize=8, scatter_kws=None, line_kws=None, by=['category'], title="pois"):
     """
 
     :param pois:
@@ -43,7 +43,7 @@ def pois_scatter(pois, overlap=False, base_figsize=8, scatter_kws=None, line_kws
     if overlap:
         fig, ax = plt.subplots(figsize=(base_figsize, base_figsize))
         for label, df in category_gb:
-            _category_scatter(df['lon'], df['lat'], title='pois', label=label,
+            _category_scatter(df['lon'], df['lat'], title=title, label=label,
                               scatter_kws=scatter_kws, line_kws=line_kws, ax=ax)
         ax.legend(*ax.get_legend_handles_labels())
     else:

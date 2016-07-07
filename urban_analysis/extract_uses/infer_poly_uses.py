@@ -9,6 +9,8 @@ import classif_uses
 import utils
 import time
 
+import shp_utils
+
 
 def getNameSavedFiles(suffix_out_shp):
 	""" Get the list of all generated files
@@ -128,7 +130,7 @@ def idx_polygonsToInfer(df_polygon):
 	Filter points which have building=yes	
 	Return indices
 	"""
-	columns_polygons = [list[0] for list in utils.Polyfields]
+	columns_polygons = [list[0] for list in shp_utils.Polyfields]
 	if (parameters.USE_ignoreRowsWithTaggingInformation):
 		selectedCols = [col for col in columns_polygons if col not in ['osm_id', 'way_area', 'z_order', 'building', 'name', 'tags']]
 	else:
@@ -223,9 +225,9 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 	################################################
 	### Read data-set
 	# Polygon shapefile
-	polygon_shapes , df_polygon = utils.read_shp_dbf(polygon_shapefile)
+	polygon_shapes , df_polygon = shp_utils.read_shp_dbf(polygon_shapefile)
 	### Polygons appearing in several quadrants
-	polygon_shapes_sq , df_polygon_sq = utils.read_shp_dbf(poly_shp_several_quadrants)
+	polygon_shapes_sq , df_polygon_sq = shp_utils.read_shp_dbf(poly_shp_several_quadrants)
 	################################################
 
 	# Get the polygons which need to be inferred: building=yes, afterwards Null values
@@ -276,8 +278,8 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 
 
 	### Write to file
-	utils.toFile(parameters.fn_prefix+parameters.fn_uncertain+parameters.fn_inferred+parameters.fn_poly+suffix_out_shp, polygon_shapes, fc_inferred_poly_uncertain, shapefile.POLYGON, utils.reducedFields )
-	utils.toFile(parameters.fn_prefix+parameters.fn_activities+parameters.fn_inferred+parameters.fn_poly+suffix_out_shp, polygon_shapes, fc_inferred_poly_activity, shapefile.POLYGON, utils.reducedFields )
-	utils.toFile(parameters.fn_prefix+parameters.fn_residential+parameters.fn_inferred+parameters.fn_poly+suffix_out_shp, polygon_shapes, fc_inferred_poly_residential, shapefile.POLYGON, utils.reducedFields )
+	shp_utils.toFile(parameters.fn_prefix+parameters.fn_uncertain+parameters.fn_inferred+parameters.fn_poly+suffix_out_shp, polygon_shapes, fc_inferred_poly_uncertain, shapefile.POLYGON)
+	shp_utils.toFile(parameters.fn_prefix+parameters.fn_activities+parameters.fn_inferred+parameters.fn_poly+suffix_out_shp, polygon_shapes, fc_inferred_poly_activity, shapefile.POLYGON)
+	shp_utils.toFile(parameters.fn_prefix+parameters.fn_residential+parameters.fn_inferred+parameters.fn_poly+suffix_out_shp, polygon_shapes, fc_inferred_poly_residential, shapefile.POLYGON)
 
 	########################################################################################################################

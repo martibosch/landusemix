@@ -10,9 +10,19 @@ import extract_poly_uses
 import infer_poly_uses
 import poly_to_pts
 
+import classif_uses
+
 import cut_shapefile
 import population
-import utils
+import mapzen
+
+def delete_downloaded_shapefile(folder, city_ref):
+	import os
+	if (folder[-1] != "/"): folder = folder + "/"
+	files = os.listdir(folder)
+	for f in files:
+		if ((city_ref in f) and (os.path.isfile(folder+f))):
+			os.remove(folder+f)
 
 def clipFiles(point_shapefile, polygon_shapefile):
 	""" Clip input point and polygon shapefiles
@@ -40,9 +50,9 @@ def performExtraction(point_shapefile, polygon_shapefile, population_count_file 
 		if (not(parameters.processOverwrite)): # Avoid over-writing: Just perform the key category mapping
 			# Map to final activity categories to corresponding file
 			if (os.path.isfile(parameters.fn_joinResiActiv+'.shp')):
-				utils.performKeyCategoryMapping(parameters.fn_joinResiActiv)
+				classif_uses.performKeyCategoryMapping(parameters.fn_joinResiActiv, parameters.USE_multiActivitiesClassification)
 			else:
-				utils.performKeyCategoryMapping(parameters.fn_activities_final)
+				classif_uses.performKeyCategoryMapping(parameters.fn_activities_final, parameters.USE_multiActivitiesClassification)
 			return # Exit
 
 	# Clip files in parts (reduced memory needs if map is too big, faster polygon infer)
@@ -102,7 +112,7 @@ def performExtraction(point_shapefile, polygon_shapefile, population_count_file 
 	###
 
 	# Map to final activity categories
-	utils.performKeyCategoryMapping(parameters.fn_joinResiActiv)
+	classif_uses.performKeyCategoryMapping(parameters.fn_joinResiActiv, parameters.USE_multiActivitiesClassification)
 	################################################################
 	################################################################
 
@@ -156,7 +166,7 @@ def process_city(city_ref):# city_ref must contain the format city_country
 		os.makedirs(parameters.citiesFolder)
 
 	# Download shapefile associated to the city
-	utils.getCityShapefile(parameters.citiesFolder, [city_ref])
+	mapzen.getCityShapefile(parameters.citiesFolder, [city_ref])
 
 	# Set parameters
 	parameters.setInputFiles(city_ref, popu_count_file = None, numberOfCuts = 16)
@@ -164,11 +174,8 @@ def process_city(city_ref):# city_ref must contain the format city_country
 	process()
 
 	# Delete downloaded shapefiles
-	import os
-	files = os.listdir("cities")
-	for f in files:
-		if (('avila' in f) and (os.path.isfile("cities/"+f))):
-			os.remove("cities/"+f)
+	delete_downloaded_shapefile(parameters.citiesFolder, city_ref)
+
 
 '''
 class ExtractUses(object):

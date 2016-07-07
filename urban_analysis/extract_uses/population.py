@@ -10,6 +10,7 @@ import time
 
 import parameters
 import utils
+import shp_utils
 
 
 ############################################################################
@@ -83,7 +84,6 @@ def pixel2coord(GeoTransform, x, y):
     xp = a * x + b * y + xoff
     yp = d * x + e * y + yoff
     return(xp, yp)
-
 def coord2pixel(GeoTransform, lon, lat):
 	""" Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate	the pixel location of a geospatial coordinate
 	Input: GeoTransformation, longitude, latitude
@@ -155,7 +155,7 @@ def getROI(GeoTransform, point_shapefile, polygon_shapefile = None, line_shapefi
 	# Get Region of interest (x,y coordinates) given the Geotransformation, and the shapefile which contain the points
 	##########################
 	# bbox Format: latitude1 , longitude1 , latitude2, longitude2
-	bbox = utils.getBoundingBox(point_shapefile, polygon_shapefile, line_shapefile)
+	bbox = shp_utils.getBoundingBox(point_shapefile, polygon_shapefile, line_shapefile)
 	return getROI_fromBbox(GeoTransform, bbox)
 ############################################################################
 
@@ -187,7 +187,7 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 	####################################################################################
 	
 	# Read shapefile and attributes
-	shape_residential_pts, df_residential_pts = utils.read_shp_dbf(residential_point_shapefile)
+	shape_residential_pts, df_residential_pts = shp_utils.read_shp_dbf(residential_point_shapefile)
 	# Replace with population format: Key=residential, value=population count
 	df_residential_pts['value'] = 0
 	df_residential_pts['key'] = "residential"
@@ -243,5 +243,5 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 			print('No population count file provided')
 
 	# Save file
-	utils.toFile(parameters.fn_prefix+parameters.fn_final_clasif+parameters.fn_residential, shape_residential_pts, df_residential_pts, shapefile.POINT, utils.reducedFields)
+	shp_utils.toFile(parameters.fn_prefix+parameters.fn_final_clasif+parameters.fn_residential, shape_residential_pts, df_residential_pts, shapefile.POINT)
 	####################################################################################

@@ -5,7 +5,7 @@ import plots
 import spatial_measures
 import lu_mix
 import utils
-import extract_uses.utils
+import extract_uses.shp_utils
 
 
 class Analysis(object):
@@ -18,7 +18,7 @@ class Analysis(object):
         # basic info
         self.city_ref = city_ref
         if bbox is None:
-            self.bbox = extract_uses.utils.getBoundingBox(pois_shp_path)
+            self.bbox = extract_uses.shp_utils.getBoundingBox(pois_shp_path)
         else:
             self.bbox = bbox
         self._pois_shp_path = pois_shp_path
@@ -58,7 +58,7 @@ class Analysis(object):
         else:
             self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
         if (self.bbox is None): # If bounding box is not set
-            self.bbox = extract_uses.utils.getBoundingBox(self._pois_shp_path)
+            self.bbox = extract_uses.shp_utils.getBoundingBox(self._pois_shp_path)
         return self._pois
 
     @property
@@ -242,4 +242,4 @@ class Analysis(object):
     # PLOTS
     def scatter_pois(self, overlap=True, base_figsize=10):
         plots.pois_scatter(self.pois, overlap=overlap,
-                           base_figsize=base_figsize)
+                           base_figsize=base_figsize, scatter_kws={'alpha':0.2}, title=self.city_ref)

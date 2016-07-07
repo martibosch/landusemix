@@ -1,26 +1,7 @@
 import pandas as pd
-from shapefile import Reader, ShapefileException
-
 
 class PoisShpDoesNotExist(Exception):
     pass
-
-
-def read_shp_dbf(file_shape):
-    """ Read a shapefile, returning separately shapes and attributes
-    """
-    try:
-        reader_shp = Reader(file_shape)
-    except ShapefileException:
-        raise PoisShpDoesNotExist
-
-    shapes = reader_shp.shapes()
-    # Columns correspond to all the elements excepts for the first one: A deletion flag
-    columns = [list[0]
-               for list in reader_shp.fields[1:len(reader_shp.fields)]]
-    # Conver to data frame and decode
-    return shapes, pd.DataFrame(reader_shp.records(), columns=columns)
-
 
 def get_extracted_osm_points(shp_file_path, city_ref = None):
     """ Loads the extracted points of interest
@@ -31,10 +12,16 @@ def get_extracted_osm_points(shp_file_path, city_ref = None):
 
     """
     import extract_uses.extract_uses as extract_uses
+    from extract_uses import shp_utils
     import os
+    # Check if file exists: full_uses.shp
     if (not(os.path.isfile(shp_file_path))):
         extract_uses.process_city(city_ref)
-    shapes, df = read_shp_dbf(shp_file_path)
+    # Get shapes and attributes
+    shapes, df = shp_utils.read_shp_dbf(shp_file_path, decode_bytes = False)
+
+    if (len(shapes) <= 0):
+        raise PoisShpDoesNotExist
 
     # Get longitude and latitude
     lon = [i.points[0][0] for i in shapes]

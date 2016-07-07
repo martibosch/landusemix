@@ -117,6 +117,20 @@ def keyCategoryMapping(pois_df, USE_multiActivitiesClassification):
 	####################
 	return pois_df
 
+def performKeyCategoryMapping(fn_result, USE_multiActivitiesClassification = False):
+	""" Given the file containing all point activities: Map {key,value} to the final key category classification
+	"""
+	import shp_utils
+	import shapefile
+	### Read data-set
+	shapes , df_attrs = shp_utils.read_shp_dbf(fn_result)
+	# Perform the mapping to categories
+	df_attrs = keyCategoryMapping(df_attrs, USE_multiActivitiesClassification)
+	# Add the category field
+	reducedFields_category = shp_utils.reducedFields + [['category','C',32,0]]
+	# Save
+	shp_utils.toFile(fn_result, shapes, df_attrs, shapefile.POINT, reducedFields_category)
+
 ####################################################################################
 ### Roads:
 highway_important =  ["motor_way" , "trunk" , "primary" , "secondary", "tertiary", "residential", "unclassified", "service"]

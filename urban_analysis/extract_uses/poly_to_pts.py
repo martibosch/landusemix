@@ -8,7 +8,9 @@ import os.path
 
 import cut_shapefile
 import parameters
+
 import utils
+import shp_utils
 
 
 def getNameSavedFiles(PolyToPoint_needed):
@@ -35,7 +37,7 @@ def convertPolysToPoints(in_shp_poly_file, out_shp_pts_file):
 	####################################################################################
 	### Read data-set
 	# Point shapefile
-	polygon_shapes , df_polygon = utils.read_shp_dbf(in_shp_poly_file)
+	polygon_shapes , df_polygon = shp_utils.read_shp_dbf(in_shp_poly_file)
 	####################################################################################
 
 	Points_atr = [ i[1] for i in df_polygon.iterrows() ]
@@ -44,7 +46,7 @@ def convertPolysToPoints(in_shp_poly_file, out_shp_pts_file):
 	if (parameters.USE_verbose):
 		print('poly_to_pts. Dataset; Number of points',out_shp_pts_file,len(Points_atr))
 
-	utils.toFile(out_shp_pts_file, Points_xy, df_polygon, shapefile.POINT, utils.reducedFields)
+	shp_utils.toFile(out_shp_pts_file, Points_xy, df_polygon, shapefile.POINT)
 
 	if (parameters.deletePolyToPts):
 		cut_shapefile.removeFiles(in_shp_poly_file+".shp")

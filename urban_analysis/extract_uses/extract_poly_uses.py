@@ -8,6 +8,8 @@ import utils
 import classif_uses
 import parameters
 
+import shp_utils
+
 def getNameSavedFiles(suffix_out_shp):
 	""" Get the list of all generated files
 	"""
@@ -26,7 +28,7 @@ def main(polygon_shapefile, suffix_out_shp):
 	####################################################################################
 	### Read data-set
 	# Polygon shapefile
-	polygon_shapes , df_polygon = utils.read_shp_dbf(polygon_shapefile)
+	polygon_shapes , df_polygon = shp_utils.read_shp_dbf(polygon_shapefile)
 	####################################################################################
 
 	if (parameters.USE_verbose):
@@ -69,8 +71,8 @@ def main(polygon_shapefile, suffix_out_shp):
 		residential_poly = residential_poly.groupby(residential_poly.index).first()
 	####################################################################################
 	### Save to file
-	utils.toFile(parameters.fn_prefix+parameters.fn_residential+parameters.fn_poly+suffix_out_shp, polygon_shapes, residential_poly, shapefile.POLYGON, utils.reducedFields)
-	utils.toFile(parameters.fn_prefix+parameters.fn_activities+parameters.fn_poly+suffix_out_shp, polygon_shapes, activities_poly, shapefile.POLYGON, utils.reducedFields)
+	shp_utils.toFile(parameters.fn_prefix+parameters.fn_residential+parameters.fn_poly+suffix_out_shp, polygon_shapes, residential_poly, shapefile.POLYGON)
+	shp_utils.toFile(parameters.fn_prefix+parameters.fn_activities+parameters.fn_poly+suffix_out_shp, polygon_shapes, activities_poly, shapefile.POLYGON)
 	####################################################################################
 
 	if (parameters.USE_verbose):

@@ -1,16 +1,11 @@
-import os
-from time import sleep
-
-import numpy as np  # 1.7 or higher
 import pandas as pd  # 0.10 or higher
-from matplotlib.pyplot import *
-from shapely.geometry import Polygon
 import shapefile
 import os
 
 import classif_uses
 import parameters
 import utils
+import shp_utils
 
 
 def getNameSavedFiles(suffix_out_shp):
@@ -32,7 +27,7 @@ def main(points_shapefile, suffix_out_shp):
     ### Read data-set
     # Point shapefile
     print(points_shapefile)
-    point_shapes , df_point = utils.read_shp_dbf(points_shapefile)
+    point_shapes , df_point = shp_utils.read_shp_dbf(points_shapefile)
     ####################################################################################
     
     if (parameters.USE_verbose):
@@ -58,18 +53,12 @@ def main(points_shapefile, suffix_out_shp):
 
     # Filter important columns: osm_id, key, value
     pts_activities_shops = utils.filterColumns('shop', sub_activities_shops)
-    pts_activities_amenities = utils.filterColumns(
-        'amenity', sub_activities_amenities)
-    pts_activities_leisure = utils.filterColumns(
-        'leisure', sub_activities_leisure)
-    pts_activities_buildings = utils.filterColumns(
-        'building', sub_activities_buildings)
-    pts_activities_landuse = utils.filterColumns(
-        'landuse', sub_activities_landuse)
-    pts_residential_buildings = utils.filterColumns(
-        'building', sub_residential_buildings)
-    pts_residential_landuse = utils.filterColumns(
-        'landuse', sub_residential_landuse)
+    pts_activities_amenities = utils.filterColumns('amenity', sub_activities_amenities)
+    pts_activities_leisure = utils.filterColumns('leisure', sub_activities_leisure)
+    pts_activities_buildings = utils.filterColumns('building', sub_activities_buildings)
+    pts_activities_landuse = utils.filterColumns('landuse', sub_activities_landuse)
+    pts_residential_buildings = utils.filterColumns('building', sub_residential_buildings)
+    pts_residential_landuse = utils.filterColumns('landuse', sub_residential_landuse)
 
     ##########################################################################
     # Concatenate keeping indices
@@ -85,10 +74,8 @@ def main(points_shapefile, suffix_out_shp):
             residential_pts.index).first()
     ##########################################################################
     # Save to file
-    utils.toFile(parameters.fn_prefix + parameters.fn_residential + parameters.fn_pts +
-                 suffix_out_shp, point_shapes, residential_pts, shapefile.POINT, utils.reducedFields)
-    utils.toFile(parameters.fn_prefix + parameters.fn_activities + parameters.fn_pts +
-                 suffix_out_shp, point_shapes, activities_pts, shapefile.POINT, utils.reducedFields)
+    shp_utils.toFile(parameters.fn_prefix + parameters.fn_residential + parameters.fn_pts +suffix_out_shp, point_shapes, residential_pts, shapefile.POINT)
+    shp_utils.toFile(parameters.fn_prefix + parameters.fn_activities + parameters.fn_pts +suffix_out_shp, point_shapes, activities_pts, shapefile.POINT)
     ##########################################################################
 
     if (parameters.USE_verbose):
