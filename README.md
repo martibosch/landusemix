@@ -16,6 +16,7 @@ make
 
 sudo make install
 
+
 2. Install a virtual environment
 
 pip install virtualenvwrapper
@@ -27,6 +28,7 @@ echo export PROJECT_HOME=$HOME/urbansprawl >>~/.bashrc
 echo source /usr/local/bin/virtualenvwrapper.sh >>~/.bashrc
 
 source ~/.bashrc
+
 
 3. Create the virtual environment
 
@@ -40,6 +42,8 @@ pip install --upgrade setuptools
 
 pip install -r requirements.txt
 
+
 4. Work on the **urbansprawl** environment `workon urbansprawl` (and use `deactivate` to exit)
+
 
 5. Enjoy!
