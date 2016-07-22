@@ -45,36 +45,31 @@ class Analysis(object):
         # stuff to cache
         self._f_count_act = None
         self._f_count_res = None
+        self._f_count_total = None
         self._f_kde_act = None
         self._f_kde_res = None
+        self._f_kde_total = None
         self._f_lu_mix_grid = None
 
     # STORED DATA STRUCTURES
 
     @property
     def pois(self):
-        if self._pois is not None:
-            pass
-        else:
+        if self._pois is None:
             self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
-        if (self.bbox is None): # If bounding box is not set
+        if self.bbox is None: # If bounding box was not set
             self.bbox = extract_uses.shp_utils.getBoundingBox(self._pois_shp_path)
         return self._pois
 
     @property
     def kde(self):
-        if self._kde is not None:
-            pass
-        else:
-            self._kde = loaders.load_grid_kde(
-                self.city_ref, self.pois, self.bbox, self._grid_step)
+        if self._kde is None:
+            self._kde = loaders.load_grid_kde(self.city_ref, self.pois, self.bbox, self._grid_step)
         return self._kde
 
     @property
     def graph(self):
-        if self._graph is not None:
-            pass
-        else:
+        if self._graph is None:
             self._graph = loaders.load_graph(self.city_ref, self.bbox)
         return self._graph
 
@@ -82,9 +77,7 @@ class Analysis(object):
 
     @property
     def grid(self):
-        if self._grid is not None:
-            pass
-        else:
+        if self._grid is None:
             self._grid = utils.grid_from_bbox(self.bbox, self._grid_step)
         return self._grid
 
@@ -96,7 +89,7 @@ class Analysis(object):
     def grid_step(self, value):
         if value != self._grid_step:
             self._grid_step = value
-            # not valid anymore:
+            # Not valid anymore: Reset
             self._grid = None
             self._kde = None
             self._moran = None
@@ -108,61 +101,58 @@ class Analysis(object):
             self._f_lu_mix_grid = None
             self._f_count_act = None
             self._f_count_res = None
+            self._f_count_total = None
             self._f_kde_act = None
             self._f_kde_res = None
+            self._f_kde_total = None
 
     @property
     def f_lu_mix_grid(self):
-        if self._f_lu_mix_grid is not None:
-            pass
-        else:
-            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(
-                self.f_kde_act, self.f_kde_res)
+        if self._f_lu_mix_grid is None:
+            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res)
         return self._f_lu_mix_grid
 
     @property
     def f_count_act(self):
-        if self._f_count_act is not None:
-            pass
-        else:
-            self._f_count_act = spatial_measures.grid_cell_pois_count(
-                self.pois[self.pois['category'] == 'activity'], *self.grid)
+        if self._f_count_act is None:
+            self._f_count_act = spatial_measures.grid_cell_pois_count(self.pois[self.pois['category'] == 'activity'], *self.grid)
         return self._f_count_act
 
     @property
     def f_count_res(self):
-        if self._f_count_res is not None:
-            pass
-        else:
-            self._f_count_res = spatial_measures.grid_cell_pois_count(
-                self.pois[self.pois['category'] == 'residential'], *self.grid)
+        if self._f_count_res is None:
+            self._f_count_res = spatial_measures.grid_cell_pois_count(self.pois[self.pois['category'] == 'residential'], *self.grid)
         return self._f_count_res
+    
+    @property
+    def f_count_total(self):
+        if self._f_count_total is None:
+            self._f_count_total = self.f_count_res + self.f_count_act
+        return self._f_count_total
 
     @property
     def f_kde_act(self):
-        if self._f_kde_act is not None:
-            pass
-        else:
-            self._f_kde_act = spatial_measures.grid_cell_kde_average(
-                self.kde['activity'].values)
+        if self._f_kde_act is None:
+            self._f_kde_act = spatial_measures.grid_cell_kde_average(self.kde['activity'].values)
         return self._f_kde_act
 
     @property
     def f_kde_res(self):
-        if self._f_kde_res is not None:
-            pass
-        else:
-            self._f_kde_res = spatial_measures.grid_cell_kde_average(
-                self.kde['residential'].values)
+        if self._f_kde_res is None:
+            self._f_kde_res = spatial_measures.grid_cell_kde_average(self.kde['residential'].values)
         return self._f_kde_res
+    
+    @property
+    def f_kde_total(self):
+        if self._f_kde_total is None:
+            self._f_kde_total = spatial_measures.grid_cell_kde_average(self.kde['total'].values)
+        return self._f_kde_total
 
     # MEASURES
 
     @property
     def moran(self):
-        if self._moran:
-            pass
-        else:
+        if self._moran is None:
             xx, yy = self.grid
             self._moran = {
                 'activity': spatial_measures.moran_index(self.f_count_act, xx, yy),
@@ -172,17 +162,13 @@ class Analysis(object):
 
     @property
     def lu_mix(self):
-        if self._lu_mix:
-            pass
-        else:
+        if self._lu_mix is None:
             self._lu_mix = lu_mix.compute_phi(self.f_lu_mix_grid)
         return self._lu_mix
 
     @property
     def entropy(self):
-        if self._entropy:
-            pass
-        else:
+        if self._entropy is None:
             self._entropy = {
                 'activity': spatial_measures.shannon_entropy(self.f_kde_act),
                 'residential': spatial_measures.shannon_entropy(self.f_kde_res)
@@ -191,9 +177,7 @@ class Analysis(object):
 
     @property
     def relative_entropy(self):
-        if self._relative_entropy:
-            pass
-        else:
+        if self._relative_entropy is None:
             # could also be np.log(self.f_kde_res.size)
             self._relative_entropy = {
                 'activity': self.entropy['activity'] / np.log(self.f_kde_act.size),
@@ -203,20 +187,14 @@ class Analysis(object):
 
     @property
     def dissimilarity(self):
-        if self._dissimilarity:
-            pass
-        else:
-            self._dissimilarity = spatial_measures.dissimilarity(
-                self.f_count_act, self.f_count_res)
+        if self._dissimilarity is None:
+            self._dissimilarity = spatial_measures.dissimilarity(self.f_count_act, self.f_count_res)
         return self._dissimilarity
 
     @property
     def kde_dissimilarity(self):
-        if self._kde_dissimilarity:
-            pass
-        else:
-            self._kde_dissimilarity = spatial_measures.dissimilarity(
-                self.f_kde_act, self.f_kde_res)
+        if self._kde_dissimilarity is None:
+            self._kde_dissimilarity = spatial_measures.dissimilarity(self.f_kde_act, self.f_kde_res)
         return self._kde_dissimilarity
 
     # PERSISTENCE

@@ -98,6 +98,6 @@ def get_grid_all_kde(pois, bbox, grid_step=0.0015):
     for category, items in pois.groupby(by=['category']):
         kde_dict[category] = pd.DataFrame(_get_grid_kde(items, grid))
 
-    # kde_dict['total'] = pd.DataFrame(_get_grid_kde(pois, grid))
+    kde_dict['total'] = pd.DataFrame(_get_grid_kde(pois, grid))
 
     return kde_dict
