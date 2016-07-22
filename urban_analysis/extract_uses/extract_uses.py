@@ -16,13 +16,6 @@ import cut_shapefile
 import population
 import mapzen
 
-def delete_downloaded_shapefile(folder, city_ref):
-	import os
-	if (folder[-1] != "/"): folder = folder + "/"
-	files = os.listdir(folder)
-	for f in files:
-		if ((city_ref in f) and (os.path.isfile(folder+f))):
-			os.remove(folder+f)
 
 def clipFiles(point_shapefile, polygon_shapefile):
 	""" Clip input point and polygon shapefiles
@@ -174,7 +167,7 @@ def process_city(city_ref):# city_ref must contain the format city_country
 	process()
 
 	# Delete downloaded shapefiles
-	delete_downloaded_shapefile(parameters.citiesFolder, city_ref)
+	mapzen.remove_mapzen_files(parameters.citiesFolder, city_ref)
 
 
 '''

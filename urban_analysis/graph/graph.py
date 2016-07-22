@@ -33,6 +33,7 @@ def spatialite_network(folder, city_country):
 	if (os.path.isfile(pbf_file)): os.remove(pbf_file)
 
 	# Convert to shapefile
+	print(folder+city_country,sqlite_file)
 	call_ogr = ['ogr2ogr','-f',"ESRI Shapefile",folder+city_country,sqlite_file,'-dsco','SPATIALITE=yes']
 
 	if (call(call_ogr) == 0):
@@ -99,3 +100,4 @@ def get_closest_node(nodeOfInterest, graph):
 	    	closestNode = node
 	print("Distance to closest node in Km: ",distanceToNode)
 	return closestNode
+	

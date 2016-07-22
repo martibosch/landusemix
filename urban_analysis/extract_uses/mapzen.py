@@ -1,4 +1,4 @@
-
+# Module to download shapefile from mapzen
 
 def download_unzip(citiesFolder, city_download):
 	import urllib
@@ -54,3 +54,13 @@ def getCityOsmPbf(citiesFolder, cities_countries):
             testfile = urllib.URLopener()
             testfile.retrieve(city_download, citiesFolder + city_country + ".osm.pbf")
             print('Downloaded osm pbf:',city_download)
+
+def remove_mapzen_files(folder, city_ref):
+	""" Remove the downloaded mapzen files. (i.e. Any file containing the city_ref name. Remember that results are stored in a folder called the same way as the city)
+	"""
+	import os
+	if (folder[-1] != "/"): folder = folder + "/"
+	files = os.listdir(folder)
+	for f in files:
+		if ((city_ref in f) and (os.path.isfile(folder+f))):
+			os.remove(folder+f)
