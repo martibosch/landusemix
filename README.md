@@ -1,6 +1,6 @@
 # Package dependencies
 
-- Install (for your operating system) **Python 2.7**, Spatialite and GDAL
+- Install (for your operating system) **Python 2.7**, **Spatialite** and **GDAL**
 ```sh
 sudo apt-get install python2.7-dev g++ build-essential python-pip python-matplotlib libspatialite-dev spatialite-bin gdal-bin
 ```
@@ -18,21 +18,15 @@ make
 sudo make install
 ```
 
-- Install a virtual environment
+- Create the virtual environment and install required dependencies
 ```sh
 pip install virtualenvwrapper
 echo export WORKON_HOME=$HOME/.virtualenvs >>~/.bashrc
 echo export PROJECT_HOME=$HOME/urbansprawl >>~/.bashrc
 echo source /usr/local/bin/virtualenvwrapper.sh >>~/.bashrc
 source ~/.bashrc
-```
-
-- Create the virtual environment
-```sh
 mkvirtualenv --python=`which python2.7` urbansprawl
 workon urbansprawl
-pip install --upgrade pip
-pip install --upgrade setuptools
 pip install -r requirements.txt
 ```
 
