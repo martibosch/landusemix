@@ -4,7 +4,7 @@
 ```sh
 sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
 sudo apt-get update
-sudo apt-get install g++ build-essential python2.7-dev python-pip python-matplotlib libspatialite-dev spatialite-bin gdal-bin python-gdal libgdal-dev
+sudo apt-get install g++ build-essential python2.7-dev python-pip python-matplotlib libspatialite-dev spatialite-bin gdal-bin python-gdal libgdal-dev libfreetype6-dev
 export CPLUS_INCLUDE_PATH=/usr/include/gdal
 export C_INCLUDE_PATH=/usr/include/gdal
 ```
