@@ -1,5 +1,6 @@
 import numpy as np
 
+#USE_normalise_kde = True
 USE_normalise_kde = True
 normalisation_max = False
 
@@ -68,7 +69,7 @@ def metric_phi_jaccard(x,y):
 	return (2*x*y) / (x*x+y*y)
 
 # Define metrics
-function_phi = {'phi_jaccard' : metric_phi_jaccard, 'phi_sorensen' : metric_phi_sorensen, 'phi_entropy' : metric_phi_entropy, 'phi' : metric_phi, 'phi_balance_index' : metric_phi_balance_index, 'phi_generalized_entropy_alpha' : metric_phi_generalized_entropy_alpha, 'phi_true_diversity' : metric_phi_true_diversity_index}
+function_phi = {'phi_jaccard' : metric_phi_jaccard, 'phi_sorensen' : metric_phi_sorensen, 'phi_entropy' : metric_phi_entropy, 'phi_generalized_entropy_alpha' : metric_phi_generalized_entropy_alpha, 'phi' : metric_phi, 'phi_balance_index' : metric_phi_balance_index, 'phi_true_diversity' : metric_phi_true_diversity_index}
 def get_phi_metrics():
 	return function_phi.keys()
 
@@ -86,8 +87,8 @@ def compute_landuse_mix_grid(kde_activities, kde_residential, phi_metric = 'phi_
 	np_kde_residential = np.matrix(kde_residential)
 
 	if (USE_normalise_kde): # Normalise KDE's. Otherwise: Entropy based metric may return negative values (probabilities lie between 0 and 1)
-		np_kde_activities = normalise_kde(np_kde_activities)
-		np_kde_residential = normalise_kde(np_kde_residential)
+		np_kde_activities = normalise_kde(np_kde_activities.copy())
+		np_kde_residential = normalise_kde(np_kde_residential.copy())
 
 	# Intialize data structure
 	lu_mix = np.zeros(shape=kde_activities.shape)

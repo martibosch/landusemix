@@ -107,12 +107,6 @@ class Analysis(object):
             self._f_kde_total = None
 
     @property
-    def f_lu_mix_grid(self):
-        if self._f_lu_mix_grid is None:
-            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res)
-        return self._f_lu_mix_grid
-
-    @property
     def f_count_act(self):
         if self._f_count_act is None:
             self._f_count_act = spatial_measures.grid_cell_pois_count(self.pois[self.pois['category'] == 'activity'], *self.grid)
@@ -147,9 +141,15 @@ class Analysis(object):
         if self._f_kde_total is None:
             self._f_kde_total = spatial_measures.grid_cell_kde_average(self.kde['total'].values)
         return self._f_kde_total
+    
+    @property
+    def f_lu_mix_grid(self):
+        if self._f_lu_mix_grid is None:
+            self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res, self._phi_metric)
+        return self._f_lu_mix_grid
 
     # MEASURES
-
+    
     @property
     def moran(self):
         if self._moran is None:
