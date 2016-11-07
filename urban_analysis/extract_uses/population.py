@@ -183,8 +183,8 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 	Given the population count grid and the residential points, estimate/distribute the population count for each residential point
 	"""
 	####################################################################################
-	if (parameters.USE_verbose):
-		print('Population down-scaling')
+	if (parameters.USE_verbose or parameters.USE_mini_verbose):
+		if (population_count_file != None): print('Population down-scaling')
 	####################################################################################
 	
 	# Read shapefile and attributes
@@ -209,7 +209,7 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 		population_np = getSubArray(dataset, x1,y1,x2,y2)
 		##########################
 
-		if (parameters.USE_verbose):
+		if (parameters.USE_verbose or parameters.USE_mini_verbose):
 			start_time = time.time()
 
 		# For the given raster, assign to the corresponding residential points its population count
@@ -236,7 +236,7 @@ def population_downscaling(population_count_file, residential_point_shapefile):
 				# Set the value
 				df_residential_pts.loc[ within_residential_pts.index ,'value'] = homogeneousPopCountDistribution
 
-		if (parameters.USE_verbose):
+		if (parameters.USE_verbose or parameters.USE_mini_verbose):
 			print("--- %s minutes ---" % ((time.time() - start_time)/60.) )
 	else:
 		# Population count = None

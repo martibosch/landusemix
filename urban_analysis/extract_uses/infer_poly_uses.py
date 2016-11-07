@@ -200,10 +200,11 @@ def testValid(polygon_shapes):
 	"""
 	Polys_ = [ Polygon(i.points) for i in polygon_shapes]
 	#Polys_ = [ Polygon(i.points).buffer(0) for i in polygon_shapes]
-	all_valid = all(i.is_valid for i in Polys_)	
-	print('All polygons valid? ',all_valid)
+	all_valid = all(i.is_valid for i in Polys_)
+	if (parameters.USE_verbose):
+		print('All polygons valid? ',all_valid)
 	if (not(all_valid)):
-		print('All polygons must be valid!')
+		print('Error: All polygons must be valid')
 		quit()
 
 ##############################
@@ -216,7 +217,8 @@ def main(polygon_shapefile, poly_shp_several_quadrants, suffix_out_shp):
 	Uses the reduced fields: osm_id, key, value
 	"""
 	if (not (parameters.USE_infer_polyBuildings) ):
-		print('Not inferring polygons')
+		if (parameters.USE_verbose):
+			print('Not inferring polygons')
 		return
 	if (not ( os.path.isfile(polygon_shapefile+".shp") ) ):
 		if (parameters.USE_verbose):

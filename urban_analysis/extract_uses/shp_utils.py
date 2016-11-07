@@ -1,6 +1,7 @@
 import shapefile
 import shapely
 import pandas as pd
+import parameters
 ########################################################################
 
 """ OSM default fields for points and polygons (osm2pgsql)
@@ -37,18 +38,21 @@ def getBoundingBox(point_shapefile, polygon_shapefile = None , line_shapefile = 
 	# Format: latitude1 , longitude1 , latitude2, longitude2
 	bbox = [ min(bbox_poly[1],bbox_pts[1],bbox_line[1]) , min(bbox_poly[0],bbox_pts[0],bbox_line[0]) , max(bbox_poly[3],bbox_pts[3],bbox_line[3]), max(bbox_poly[2],bbox_pts[2],bbox_line[2]) ]
 
-	print('Bounding box:',bbox)
+	if (parameters.USE_verbose):
+		print('Bounding box:',bbox)
 	return bbox
 
 ### Compatibility with encoding/decoding
+max_thresholdLength = 5
 
 def UnicodeToStr(x, thresholdLength = None):
 	""" To use only in Python2: encode the unicode input to utf-8, and strip if it is too long
 	"""
 	if (thresholdLength != None):
-		if (thresholdLength < 25):
-			print('Be careful, threshold length smaller than 25!')
-			quit()
+		if (thresholdLength < max_thresholdLength):
+			if (parameters.USE_verbose):
+				print('Be careful, threshold length smaller than: ',max_thresholdLength,x)
+			return 'VOID'
 	if isinstance(x, unicode):
 		# Decode to UTF8, then strip to remove white blank spaces at begining/end
 		try:
@@ -69,9 +73,10 @@ def ByteToStr(x, thresholdLength = None):
 	""" To use only in Python2: decode the bytes to utf-8, and strip if it is too long
 	"""
 	if (thresholdLength != None):
-		if (thresholdLength < 25):
-			print('Be careful, threshold length smaller than 25!')
-			quit()
+		if (thresholdLength < max_thresholdLength):
+			if (parameters.USE_verbose):
+				print('Be careful, threshold length smaller than: ',max_thresholdLength,x)
+			return 'VOID'
 	if isinstance(x, bytes):
 		# Decode to UTF8, then strip to remove white blank spaces at begining/end
 		try:
@@ -121,7 +126,8 @@ def toFile(fileName, shapes, shape_attrs, shapefileType, fields = None):
 	"""
 	import shutil
 	if (shape_attrs.empty):
-		print('Empty shape for file:',fileName)
+		if (parameters.USE_verbose):
+			print('Empty shape for file:',fileName)
 		return
 	if (fields == None): fields = reducedFields
 
@@ -135,7 +141,8 @@ def toFile(fileName, shapes, shape_attrs, shapefileType, fields = None):
 		elif (shapefileType == shapefile.POLYGON):
 			w.fields = Polyfields
 		else:
-			print('Error with field type')
+			if (parameters.USE_verbose):
+				print('Error with field type')
 			return
 	else:
 		w.fields = fields

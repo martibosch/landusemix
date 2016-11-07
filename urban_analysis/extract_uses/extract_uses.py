@@ -52,7 +52,8 @@ def performExtraction(point_shapefile, polygon_shapefile, population_count_file 
 	clipFiles(point_shapefile, polygon_shapefile)
 	
 	for i in range(0,parameters.numCuts):
-		print("Processing cut number:",i)
+		if (parameters.USE_verbose):
+			print("Processing cut number:",i)
 
 		### Get name files
 		in_shp_pts = parameters.fn_subregions+parameters.fn_pts + "_q"+str(i)
@@ -133,11 +134,11 @@ def process(point_shapefile = None, polygon_shapefile = None, population_count_f
 	# Check if folder exists. In this case, assume it is already processed
 	if (os.path.isdir(parameters.fn_prefix) and os.path.isfile(parameters.fn_joinResiActiv+'.shp')):
 		if (not(parameters.processOverwrite)):
-			print('Folder already exists. Assumption: Already processed. Only mapping categories and exiting.',parameters.fn_prefix)
+			print('POIs uses exist. Mapping categories and exiting.',parameters.fn_prefix)
 		else:
-			print('Folder already exists. Processing and over-writing')
+			print('POIs uses exist. They will be over-written')
 	################################################################
-	if (parameters.USE_verbose):
+	if (parameters.USE_verbose or parameters.USE_mini_verbose):
 		start_time = time.time()
 	################################################################
 	################################################################
@@ -147,8 +148,8 @@ def process(point_shapefile = None, polygon_shapefile = None, population_count_f
 
 	################################################################
 	################################################################
-	if (parameters.USE_verbose):
-		print("Complete processing: --- %s minutes ---" % ( (time.time() - start_time)/60.)  )
+	if (parameters.USE_verbose or parameters.USE_mini_verbose):
+		print("Uses extraction time: --- %s minutes ---" % ( (time.time() - start_time)/60.)  )
 	################################################################
 ################################################################
 
@@ -157,6 +158,9 @@ def process_city(city_ref):# city_ref must contain the format city_country
 	import os
 	if (not (os.path.exists(parameters.citiesFolder))):
 		os.makedirs(parameters.citiesFolder)
+        
+	if (parameters.USE_verbose or parameters.USE_mini_verbose):
+		print('City:',city_ref)
 
 	# Download shapefile associated to the city
 	mapzen.getCityShapefile(parameters.citiesFolder, [city_ref])
@@ -169,39 +173,3 @@ def process_city(city_ref):# city_ref must contain the format city_country
 	# Delete downloaded shapefiles
 	mapzen.remove_mapzen_files(parameters.citiesFolder, city_ref)
 
-
-'''
-class ExtractUses(object):
-	""" Encapsulates data/methods related to the uses extraction of a city
-	"""
-
-	def __init__(self, city_ref, population_count = None):
-		# basic info
-		self.city_ref = city_ref
-		self.bbox = None#bbox Get bounding box method
-		self._pois = None
-		#self._pois_shp_path = pois_shp_path
-
-	# When asking for pois, if pois is None, compute_pois and return
-
-
-	def compute_pois():
-		fullUsesPath = "cities/"+city_ref+"/full_uses.shp"
-		# If exists, already done...
-		if (os.path.isfile(fullUsesPath)):
-			print('City already processed. Loading pois')
-			#Load pois and return
-
-		else:
-			print('Pois do not exist. Computing...')
-			# Download shapefile associated to the city
-			utils.getCityShapefile(citiesFolder, cities_countries)
-
-			# TODO: Check how to encapsulate parameters. Population count file?
-			parameters.setInputFiles(citiesFolder, city_country, popu_count_file, numberOfCuts)
-			
-			# PROCESS
-			process()
-
-			# TODO: Delete downloaded file
-'''

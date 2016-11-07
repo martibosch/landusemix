@@ -1,26 +1,6 @@
 import numpy as np
 
-#USE_normalise_kde = True
-USE_normalise_kde = True
-normalisation_max = False
-
 USE_normalise_lu_grid = False
-
-def normalise_kde(np_kde):
-	""" Input: Numpy matrix of the KDE
-	Depending on normalisation_max parameter:
-	1) Normalise the gridded KDE; Sum(elements) = 1
-	2) Divide by its maximum value. All values are within [0,1]
-	"""
-	### Normalise to [0,1] all cells of KDE; sum(elements) = 1
-	def applyDiv(x,total):
-	    return x/total
-	applyNormalisation = np.vectorize(applyDiv)
-	if (normalisation_max):
-		norm_kde = applyNormalisation(np_kde, np_kde.max())
-	else:
-		norm_kde = applyNormalisation(np_kde, np_kde.sum())
-	return norm_kde
 
 def metric_phi(x,y):
     #return abs(x-y)
@@ -35,6 +15,7 @@ def metric_phi_entropy(x,y):
     Phi entropy metric. Based on paper "Comparing measures of urban land use mix, 2013"
     """
     import math
+    if (x <= 0 or y <= 0): return 0
     #https://www.wolframalpha.com/input/?i=plot+z+%3D+-+(+(+x*ln(x)+)+%2B+(+y*ln(y)+)+)+%2F+ln(2),+x%3D0..1
     return - ( ( x*math.log(x) ) + ( y*math.log(y) ) ) / math.log(2)
 
@@ -65,8 +46,9 @@ def metric_phi_sorensen(x,y):
 	#https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient
 	return (2*(min(x,y)) ) / (x+y)
 def metric_phi_jaccard(x,y):
-	#https://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient
-	return (2*x*y) / (x*x+y*y)
+	#https://en.wikipedia.org/wiki/Jaccard_index
+	return min(x,y) / ( x + y - min(x,y) )
+
 
 # Define metrics
 function_phi = {'phi_jaccard' : metric_phi_jaccard, 'phi_sorensen' : metric_phi_sorensen, 'phi_entropy' : metric_phi_entropy, 'phi_generalized_entropy_alpha' : metric_phi_generalized_entropy_alpha, 'phi' : metric_phi, 'phi_balance_index' : metric_phi_balance_index, 'phi_true_diversity' : metric_phi_true_diversity_index}
@@ -85,10 +67,6 @@ def compute_landuse_mix_grid(kde_activities, kde_residential, phi_metric = 'phi_
 	# Convert to numpy matrix
 	np_kde_activities = np.matrix(kde_activities)
 	np_kde_residential = np.matrix(kde_residential)
-
-	if (USE_normalise_kde): # Normalise KDE's. Otherwise: Entropy based metric may return negative values (probabilities lie between 0 and 1)
-		np_kde_activities = normalise_kde(np_kde_activities.copy())
-		np_kde_residential = normalise_kde(np_kde_residential.copy())
 
 	# Intialize data structure
 	lu_mix = np.zeros(shape=kde_activities.shape)

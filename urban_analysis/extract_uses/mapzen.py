@@ -1,3 +1,5 @@
+import parameters
+
 # Module to download shapefile from mapzen
 
 def download_unzip(citiesFolder, city_download):
@@ -15,7 +17,8 @@ def download_unzip(citiesFolder, city_download):
 	zip_ref.close()
 	# Remove zip file
 	os.remove(fname)
-	print('Downloaded and unzipped:',city_download)
+	if (parameters.USE_verbose):
+		print('Downloaded and unzipped:',city_download)
 
 def getCityShapefile(citiesFolder, cities_countries):
 	""" Download from Mapzen data metro-extracts the shapefile for the required city
@@ -31,7 +34,8 @@ def getCityShapefile(citiesFolder, cities_countries):
 	for city_country in cities_countries:
 		city_download = Dl_prefix + city_country + Dl_suffix
 		if ( os.path.isfile(citiesFolder+city_country+"_osm_polygon.shp") ):
-			print('Existing shapefile for',city_country)
+			if (parameters.USE_verbose):
+				print('Existing shapefile for:',city_country)
 		else:
 			download_unzip(citiesFolder, city_download)
 
@@ -49,11 +53,13 @@ def getCityOsmPbf(citiesFolder, cities_countries):
     for city_country in cities_countries:
         city_download = Dl_prefix + city_country + Dl_suffix
         if ( os.path.isfile(citiesFolder+city_country+".osm.pbf") ):
-            print('Existing osm pbf for',city_country)
+            if (parameters.USE_verbose):
+                print('Existing osm pbf for',city_country)
         else:
             testfile = urllib.URLopener()
             testfile.retrieve(city_download, citiesFolder + city_country + ".osm.pbf")
-            print('Downloaded osm pbf:',city_download)
+            if (parameters.USE_verbose):
+                print('Downloaded osm pbf:',city_download)
 
 def remove_mapzen_files(folder, city_ref):
 	""" Remove the downloaded mapzen files. (i.e. Any file containing the city_ref name. Remember that results are stored in a folder called the same way as the city)

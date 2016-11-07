@@ -7,23 +7,26 @@ import lu_mix
 import utils
 import extract_uses.shp_utils
 
+import time
+MEASURE_TIME = True
+
 
 class Analysis(object):
     """ Stores results and information about the analysis of city/urban area
 
     """
 
-    def __init__(self, city_ref, bbox=None, pois_shp_path=None, grid_step=.0015):
+    def __init__(self, city_ref, bbox=None, pois_shp_path=None, grid_step=100, meters_kde_distance = 400):
         super(Analysis, self).__init__()
         # basic info
         self.city_ref = city_ref
+        self.bbox = bbox
         if bbox is None:
             self.bbox = extract_uses.shp_utils.getBoundingBox(pois_shp_path)
-        else:
-            self.bbox = bbox
         self._pois_shp_path = pois_shp_path
-        self._grid_step = grid_step
+        self._grid_step = grid_step # Grid step in meters
         self._grid = None
+        self._meters_kde_distance = meters_kde_distance # Distance in meters to define KDE's bandwidth (distance of influence)
 
         # data
         self._pois = None
@@ -51,12 +54,44 @@ class Analysis(object):
         self._f_kde_total = None
         self._f_lu_mix_grid = None
 
-    # STORED DATA STRUCTURES
+    
+    #@classmethod
+    def reduce_bbox(self, bbox):
+        if self.pois is None or self.bbox is None:
+            print('POIs/Bounding box not loaded yet')
+        # Bounding box
+        lat1, lon1, lat2, lon2 = bbox
+        # Update bbox
+        self.bbox = bbox
+        # Drop POIs out of the region
+        self._pois = self._pois.drop( self._pois[ (self._pois.lat < lat1) | (self._pois.lat > lat2) | (self._pois.lon < lon1) | (self._pois.lon > lon2) ].index)
+        # Not valid anymore: Reset
+        self._grid = None
+        self._kde = None
+        self._moran = None
+        self._entropy = None
+        self._relative_entropy = None
+        self._lu_mix = None
+        self._dissimilarity = None
+        self._kde_dissimilarity = None
+        self._f_lu_mix_grid = None
+        self._f_count_act = None
+        self._f_count_res = None
+        self._f_count_total = None
+        self._f_kde_act = None
+        self._f_kde_res = None
+        self._f_kde_total = None
 
+        
+    # STORED DATA STRUCTURES
     @property
     def pois(self):
         if self._pois is None:
+            if (MEASURE_TIME):
+                start = time.time()
             self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
+            if (MEASURE_TIME):
+                print('Time POIs: --- %s minutes ---' % ( (time.time() - start)/60.)  )
         if self.bbox is None: # If bounding box was not set
             self.bbox = extract_uses.shp_utils.getBoundingBox(self._pois_shp_path)
         return self._pois
@@ -64,7 +99,11 @@ class Analysis(object):
     @property
     def kde(self):
         if self._kde is None:
-            self._kde = loaders.load_grid_kde(self.city_ref, self.pois, self.bbox, self._grid_step)
+            if (MEASURE_TIME):
+                start = time.time()
+            self._kde = loaders.load_grid_kde(self.city_ref, self._meters_kde_distance, self.pois, self.bbox, self._grid_step)
+            if (MEASURE_TIME):
+                print('Time KDE\'s: --- %s minutes ---' % ( (time.time() - start)/60.)  )
         return self._kde
 
     @property
@@ -84,6 +123,10 @@ class Analysis(object):
     @property
     def grid_step(self):
         return self._grid_step
+    
+    @property
+    def meters_kde_distance(self):
+        return self._meters_kde_distance
 
     @grid_step.setter
     def grid_step(self, value):
@@ -127,13 +170,21 @@ class Analysis(object):
     @property
     def f_kde_act(self):
         if self._f_kde_act is None:
+            if (MEASURE_TIME):
+                start = time.time()
             self._f_kde_act = spatial_measures.grid_cell_kde_average(self.kde['activity'].values)
+            #if (MEASURE_TIME): # Measuring jointly KDE's time
+                #print('Time KDE Activity:',time.time() - start)
         return self._f_kde_act
 
     @property
     def f_kde_res(self):
         if self._f_kde_res is None:
+            if (MEASURE_TIME):
+                start = time.time()
             self._f_kde_res = spatial_measures.grid_cell_kde_average(self.kde['residential'].values)
+            #if (MEASURE_TIME): # Measuring jointly KDE's time
+                #print('Time KDE Residential:',time.time() - start)
         return self._f_kde_res
     
     @property
@@ -145,7 +196,11 @@ class Analysis(object):
     @property
     def f_lu_mix_grid(self):
         if self._f_lu_mix_grid is None:
+            if (MEASURE_TIME):
+                start = time.time()
             self._f_lu_mix_grid = lu_mix.compute_landuse_mix_grid(self.f_kde_act, self.f_kde_res, self._phi_metric)
+            if (MEASURE_TIME):
+                print('Time LU Mix grid: --- %s minutes ---' % ( (time.time() - start)/60.)  )
         return self._f_lu_mix_grid
 
     # MEASURES
@@ -217,7 +272,21 @@ class Analysis(object):
 
     # TODO: to_pickle method
 
-    # PLOTS
-    def scatter_pois(self, overlap=True, base_figsize=10):
-        plots.pois_scatter(self.pois, overlap=overlap,
-                           base_figsize=base_figsize, scatter_kws={'alpha':0.2}, title=self.city_ref)
+    def plots(self, figsize = (12,12), fileSave = False, alpha = 0.1, margin=0.015):
+        """ Plot POIs, KDE's
+        """
+        # POIs
+        #plots.pois_scatter(self, overlap=False, figsize=(12,12), alpha = alpha, margin=margin, fileSave = fileSave)
+
+        # KDE
+        #plots.plot_contour(self, figsize = (12,12), fileSave = fileSave)
+        #plots.plot_(self, figsize = (12,8), fileSave = fileSave)
+        
+        plots.plot_2(self.grid, self.f_kde_act, 'KDE: Activity')
+        plots.plot_2(self.grid, self.f_kde_res, 'KDE: Residential')
+        
+        # LU Mix
+        #plots.plot_contour(str(city_ref)+'LU_Mix_Contour_entropy'+str(i),xx,yy,city.f_lu_mix_grid,'Land use mix', figsize = fig_size)
+        #plots.plot_(str(city_ref)+'LU_Mix_entropy'+str(i),xx,yy,city.f_lu_mix_grid,'Land use mix', zlim = city.f_lu_mix_grid.max(), figsize = fig_size)        
+        #plot_bubble(city,50)
+        

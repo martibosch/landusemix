@@ -7,8 +7,28 @@ import statsmodels.nonparametric.api as smnp
 
 import utils
 
-def _kde(x, y, grid):
+USE_normalise_kde = True
+normalisation_max = False
+
+def normalise_kde(np_kde):
+	""" Input: Numpy matrix of the KDE
+	Depending on normalisation_max parameter:
+	1) Normalise the gridded KDE; Sum(elements) = 1
+	2) Divide by its maximum value. All values are within [0,1]
+	"""
+	### Normalise to [0,1] all cells of KDE; sum(elements) = 1
+	def applyDiv(x,total):
+	    return x/total
+	applyNormalisation = np.vectorize(applyDiv)
+	if (normalisation_max):
+		norm_kde = applyNormalisation(np_kde, np_kde.max())
+	else:
+		norm_kde = applyNormalisation(np_kde, np_kde.sum())
+	return norm_kde
+
+def _kde(x, y, grid, bandwidth_x_y):
     """Compute a bivariate kde using statsmodels. Based on https://github.com/mwaskom/seaborn/blob/master/seaborn/distributions.py
+    Bandwidth in x,y dimensions are determined according to the walkability distance: Usually around 400m
 
     :param numpy.ndarray x: 
     :param numpy.ndarray y: 
@@ -17,24 +37,37 @@ def _kde(x, y, grid):
     :rtype: numpy.ndarray
 
     """
-    
-    """
-    if (kde_option == 1):#scott
+    # https://jakevdp.github.io/blog/2013/12/01/kernel-density-estimation/
+    # https://pypi.python.org/pypi/fastkde/1.0.9
+    # Issue with other implementations: Bandwidth.
+    if (False): # Scipy
+        # PROBLEM: Cannot set a bandwidth relative to latitude and longitude
+        # Should reproject latitude/longitude to another projection space, to avoid distortion and use a unique bandwidth
+        from scipy import stats
+        values = np.vstack([x, y])
+        kernel = stats.gaussian_kde(values)#, bw_method=[ bandwidth_x_y[0], bandwidth_x_y[1] ])
+        kde_ = kernel.pdf([grid[0].ravel(), grid[1].ravel()]).reshape(grid[0].shape)
+    else: # Statsmodel KDE
+        """
+        #normal_reference: normal reference rule of thumb (default), cv_ml: cross validation maximum likelihood, cv_ls: cross validation least squares
         bw_func = smnp.bandwidths.bw_scott 
-    if (kde_option == 2):#silverman   
         bw_func = smnp.bandwidths.bw_silverman 
-    #normal_reference: normal reference rule of thumb (default), cv_ml: cross validation maximum likelihood, cv_ls: cross validation least squares
-    if (kde_option <= 2):
         kde = smnp.KDEMultivariate([x, y], "cc", [bw_func(x), bw_func(y)])
-    if (kde_option == 3):
         kde = smnp.KDEMultivariate([x, y], "cc", 'cv_ml')
-    if (kde_option == 4):
         kde = smnp.KDEMultivariate([x, y], "cc", 'cv_ls')
-    """
-    bw_func = smnp.bandwidths.bw_scott
-    kde = smnp.KDEMultivariate([x, y], "cc", [bw_func(x), bw_func(y)])
+        """
+        kde = smnp.KDEMultivariate([x, y], "cc", [ bandwidth_x_y[0], bandwidth_x_y[1] ])
+        kde_ = kde.pdf([grid[0].ravel(), grid[1].ravel()]).reshape(grid[0].shape)
     
-    return kde.pdf([grid[0].ravel(), grid[1].ravel()]).reshape(grid[0].shape)
+    if (USE_normalise_kde):
+        # Normalise KDE's. Otherwise: Entropy based metric may return negative values (probabilities lie between 0 and 1)
+        np_kde = normalise_kde( kde_ )
+    else:
+        np_kde = kde_
+        
+    # Check
+    if (USE_normalise_kde and (not(normalisation_max) ) ) : assert( np_kde.sum() < 1.00001 and np_kde.sum() > 0.99999 )        
+    return np_kde
 
 
 def get_nodes_kde(graph, pois):
@@ -57,7 +90,7 @@ def get_nodes_kde(graph, pois):
     return kde_df
 
 
-def _get_grid_kde(pois, grid):
+def _get_grid_kde(pois, grid, bbox, meters_kde_distance ):
     """FIXME! briefly describe function
 
     :param pois: 
@@ -66,10 +99,13 @@ def _get_grid_kde(pois, grid):
     :rtype: numpy.ndarray
 
     """
-    return _kde(pois['lon'].values, pois['lat'].values, grid)
+    if (bbox == None):
+        return _kde(pois['lon'].values, pois['lat'].values, grid)
+    else:
+        return _kde(pois['lon'].values, pois['lat'].values, grid, utils.lat_lon_shift(bbox,meters_kde_distance) )
 
 
-def get_grid_category_kde(pois, bbox, grid_step=0.0015):
+def get_grid_category_kde(pois, bbox, meters_kde_distance, grid_step=100):
     """ 
 
     :param pandas.DataFrame pois: 
@@ -79,10 +115,14 @@ def get_grid_category_kde(pois, bbox, grid_step=0.0015):
     :rtype: pandas.DataFrame
 
     """
-    return pd.DataFrame(_kde(pois['lon'].values, pois['lat'].values, utils.grid_from_bbox(bbox, grid_step)))
+    if (bbox == None):
+        print('Warning: Bounding box missing')
+        return pd.DataFrame(_kde(pois['lon'].values, pois['lat'].values, utils.grid_from_bbox(bbox, grid_step) ) )
+    else:
+        return pd.DataFrame(_kde(pois['lon'].values, pois['lat'].values, utils.grid_from_bbox(bbox, grid_step), utils.lat_lon_shift(bbox,meters_kde_distance) ) )
 
 
-def get_grid_all_kde(pois, bbox, grid_step=0.0015):
+def get_grid_all_kde(pois, bbox, meters_kde_distance, grid_step=100):
     """
 
     :param pandas.DataFrame pois: 
@@ -96,8 +136,8 @@ def get_grid_all_kde(pois, bbox, grid_step=0.0015):
     grid = utils.grid_from_bbox(bbox, grid_step)
 
     for category, items in pois.groupby(by=['category']):
-        kde_dict[category] = pd.DataFrame(_get_grid_kde(items, grid))
+        kde_dict[category+'_'+str(grid_step)] = pd.DataFrame(_get_grid_kde(items, grid, bbox, meters_kde_distance))
 
-    kde_dict['total'] = pd.DataFrame(_get_grid_kde(pois, grid))
+    kde_dict['total_'+str(grid_step)] = pd.DataFrame(_get_grid_kde(pois, grid, bbox, meters_kde_distance))
 
     return kde_dict

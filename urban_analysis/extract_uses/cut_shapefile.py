@@ -40,7 +40,7 @@ def callOgr(arguments):
 	""" Perform a call to ogr2ogr tool. Use the received arguments
 	"""
 	if ( not ( call(arguments) == 0) ):
-		print('Problem calling ogr2ogr')
+		print('Problem calling ogr2ogr:',arguments)
 
 ###
 
@@ -75,8 +75,9 @@ def mergeFinalCategories(folder,numCuts,removeParts):
 	if ( folder[len(folder)-1] == "/"):
 		dirF = folder[:-1]
 
-	if ( (not(parameters.deleteParts)) or not(parameters.deletePolyToPts) ):
-		print('')
+	if (parameters.USE_verbose):
+		if ( (not(parameters.deleteParts)) or not(parameters.deletePolyToPts) ):
+			print('')
 
 	# Merge by activities and residential categories. Keep only points ?
 	# Assumes files with points are named "pts" and has the respective category name
@@ -208,7 +209,8 @@ def clip_PointFile(in_shp, out_shp):
 		read_f = shapefile.Reader(f)
 		if ( len(read_f.shapes()) == 0 ):# Empty file was clipped
 			removeFiles(f)
-			print('Removed empty file',f)
+			if (parameters.USE_verbose):
+				print('Removed empty file',f)
 
 ####################################
 

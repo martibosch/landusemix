@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 import shapefile
+import time
 from extract_uses import mapzen
 from extract_uses import shp_utils
 
 
-def spatialite_network(folder, city_country):
+def spatialite_network(city_country, folder = 'cities/'):
 	""" Computes the spatialite network for the input city_country 
 	"""
 	if os.path.isfile(folder+city_country+"/roads.shp"):
@@ -22,9 +23,10 @@ def spatialite_network(folder, city_country):
 	# Call spatialite
 	sqlite_file = folder+city_country+'.sqlite'
 	if (not(os.path.isfile(sqlite_file))):
+		start_time = time.time() # TIME
 		call_spatialite = 'spatialite_osm_net -o '+pbf_file+' -d '+sqlite_file+' -T roads -m -tf ../graph/spatialite_configuration'
 		if (call(call_spatialite.split(' ')) == 0):
-			print('Spatialite: OSM processed')
+			print("Spatialite OSM processed in: --- %s minutes ---" % ( (time.time() - start_time)/60.)  )
 		else:
 			print('Error calling spatialite: Maybe file already exists:',call_spatialite)
 	else:
@@ -47,12 +49,12 @@ def spatialite_network(folder, city_country):
 	os.remove(sqlite_file)
 
 
-def load_graph(city_folder):
+def load_graph(city_country, folder = 'cities/'):
 	""" Create the networkx graph given the routing network folder input
 	Assumes that 'roads_nodes' and 'roads' files exist in the city_folder
 	"""	
-	nodes_f = city_folder+"/roads_nodes"
-	roads_f = city_folder+"/roads"
+	nodes_f = folder + city_country + "/roads_nodes"
+	roads_f = folder + city_country + "/roads"
 	# Load shapefile
 	nodes_shapes, nodes_attr = shp_utils.read_shp_dbf(nodes_f, decode_bytes = False) # Columns: Cardinality, [osm_id]. Name + 1 to set as Id
 	roads_shapes, roads_attr = shp_utils.read_shp_dbf(roads_f, decode_bytes = False) # Columns: node_from, node_to, length, cost, oneway_fro, oneway_tof, [class, name, osm_id]

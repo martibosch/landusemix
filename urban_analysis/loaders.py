@@ -17,12 +17,15 @@ OSM_POIS_KEYS = ['osm_pois']
 # OSM_EXTRACTED_POIS_KEYS = ['activities', 'residential']
 POIS_KEYS = ['pois']
 GRAPH_KDE_KEYS = ['graph_kde']
-GRID_KDE_KEYS = ['activity', 'residential']  # , 'total']
+GRID_KDE_KEYS = ['activity', 'residential' , 'total']
 
 
 # CUSTOM EXCEPTION
 
 class NotStoredLocallyException(Exception):
+    pass
+
+class HDF5ExtError(Exception):
     pass
 
 # LOCAL STORAGE UTILS
@@ -71,10 +74,10 @@ def _update_local_data(store, df_dict, format='table'):
     :param store: pandas.HDFStore
     :param df_dict: dict indexed by hdfs keys and with pandas.DataFrame as values
     """
-    # surround by try/except?
-    [store.put(hdfs_key, df, format=format)
-     for hdfs_key, df in df_dict.items()]
-
+    try :
+        [store.put(hdfs_key, df, format=format) for hdfs_key, df in df_dict.items()]
+    except:# (HDF5ExtError) as err:
+        print('HDF5 Error. Local data not updated')
 # QUERY UTILS
 
 
@@ -101,15 +104,12 @@ def _load_data(city_ref, hdfs_keys, extra_method=None, extra_args=None):
               (str(hdfs_keys), extra_method.__name__))
         result = extra_method(*extra_args)
         with pd.HDFStore(_generate_file_path(city_ref), 'a') as store:
-            print("Saving data for `%s` at `%s`" %
-                  (str(hdfs_keys), str(store._path)))
-            # if _get_data returns pd.DataFrame we know that hdfs_keys[0] is
-            # string_types
+            print("Saving data for `%s` at `%s`" % (str(hdfs_keys), str(store._path)))
+            # if _get_data returns pd.DataFrame we know that hdfs_keys[0] is string_types
             if isinstance(result, pd.DataFrame):
                 _update_local_data(store, {hdfs_keys[0]: result})
             elif isinstance(result, dict):
-                # assert len(result) == len(hdfs_keys), "The `extra_arg_method`
-                # must return a component for each key in hdfs_keys"
+                # assert len(result) == len(hdfs_keys), "The `extra_arg_method` must return a component for each key in hdfs_keys"
                 _update_local_data(store, result)
             print("The data has been stored locally with success")
     return result
@@ -167,8 +167,7 @@ def load_pois(city_ref, pois_shp_path=None):
 
     """
     try:
-        return _load_data(city_ref, POIS_KEYS,
-                          shp_loader.get_extracted_osm_points, [pois_shp_path, city_ref])
+        return _load_data(city_ref, POIS_KEYS, shp_loader.get_extracted_osm_points, [pois_shp_path, city_ref])
     except shp_loader.PoisShpDoesNotExist:
         print('%s does not exist. You might try to load OSM pois instead through `load_osm_pois`.' % pois_shp_path)
 
@@ -186,7 +185,7 @@ def load_graph_kde(city_ref, graph=None, pois=None):
     return _load_data(city_ref, GRAPH_KDE_KEYS, kde.get_nodes_kde, [graph, pois])
 
 
-def load_grid_kde(city_ref, pois=None, bbox=None, grid_step=.0015):
+def load_grid_kde(city_ref, meters_kde_distance, pois=None, bbox=None, grid_step=100):
     """ Loads the categorized pois density at the urban nodes of `geo_graph` for `city_ref` if they are stored locally, or determines them
 
     :param city_ref: str with the name used to locally reference the file
@@ -197,8 +196,8 @@ def load_grid_kde(city_ref, pois=None, bbox=None, grid_step=.0015):
     :rtype: dict
 
     """
-    kde_dict = _load_data(city_ref,  list(map(lambda s: s + '_' + str(grid_step).replace(
-        '.', '_'), GRID_KDE_KEYS)), kde.get_grid_all_kde, [pois, bbox, grid_step])
-    [kde_dict.__setitem__(key[:key.find('_')], kde_dict.pop(key))
-     for key in kde_dict.keys() if '_' in key]
+    # Kde_category + _grid_step
+    kde_dict = _load_data(city_ref,  list(map(lambda s: s + '_' + str(grid_step), GRID_KDE_KEYS)), kde.get_grid_all_kde, [pois, bbox, meters_kde_distance, grid_step])
+    # Pop _...
+    [kde_dict.__setitem__(key[:key.find('_')], kde_dict.pop(key)) for key in kde_dict.keys() if '_' in key]
     return kde_dict

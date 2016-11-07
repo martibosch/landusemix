@@ -3,7 +3,10 @@
 This file contains several parameters used for all the scripts
 """
 ####################################################################################
+# Fully verbose
 USE_verbose = True
+# Minimal verbose
+USE_mini_verbose = True
 
 # Population count per squared km
 #population_count_file = None
