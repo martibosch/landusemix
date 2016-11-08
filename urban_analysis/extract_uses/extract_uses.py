@@ -162,9 +162,14 @@ def process_city(city_ref):# city_ref must contain the format city_country
 	if (parameters.USE_verbose or parameters.USE_mini_verbose):
 		print('City:',city_ref)
 
-	# Download shapefile associated to the city
-	mapzen.getCityShapefile(parameters.citiesFolder, [city_ref])
-
+	try :
+		# Download shapefile associated to the city
+		mapzen.getCityShapefile(parameters.citiesFolder, [city_ref])
+	except (IOError) as e: # Not possible to download
+		print('Error: Could not download shapefiles. Try downloading manually in https://mapzen.com/data/metro-extracts/')
+		return
+    
+    
 	# Set parameters
 	parameters.setInputFiles(city_ref, popu_count_file = None, numberOfCuts = 16)
 	# Process

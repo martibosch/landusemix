@@ -5,6 +5,7 @@ import plots
 import spatial_measures
 import lu_mix
 import utils
+import shapefile
 import extract_uses.shp_utils
 
 import time
@@ -89,7 +90,11 @@ class Analysis(object):
         if self._pois is None:
             if (MEASURE_TIME):
                 start = time.time()
-            self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
+            try:
+                self._pois = loaders.load_pois(self.city_ref, self._pois_shp_path)
+            except (shapefile.ShapefileException) as e:
+                print('Error: No associated shapefile')
+                raise e
             if (MEASURE_TIME):
                 print('Time POIs: --- %s minutes ---' % ( (time.time() - start)/60.)  )
         if self.bbox is None: # If bounding box was not set
