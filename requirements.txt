@@ -8,8 +8,6 @@ Cython==0.24.1
 decorator==4.0.10
 entrypoints==0.2.2
 functools32==3.2.3.post2
-# GDAL should not force a version. It must match with the installed binaries 'gdal-bin' on the machine
-GDAL
 h5py==2.6.0
 ipykernel==4.3.1
 ipython==5.0.0

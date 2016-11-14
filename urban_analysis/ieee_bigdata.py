@@ -41,9 +41,4 @@ def processCompleteCity(city_ref, grid_step, alphas, bbox = None, fig_size = Non
     city._phi_metric = 'phi_entropy'
     city._f_lu_mix_grid = None
     
-    plots.plot_lu_mix(city, figsize = (12, 8), zlim = True, fileSave = True, log_scale = False)
-    
-    # Bubble plot
-    MAX_B = bubble_plot_step # Bubble plot point size
-    grid_step_ = bubble_plot_step
-    plots.plot_bubble(city, grid_step_ = grid_step_, MAX_B = MAX_B)
+    plots.plot_lu_mix(city, figsize = (12, 8), zlim = True, fileSave = True, log_scale = False, MAX_B = bubble_plot_step, grid_step_ = bubble_plot_step)

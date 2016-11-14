@@ -8,15 +8,11 @@ USE_verbose = True
 # Minimal verbose
 USE_mini_verbose = True
 
-# Population count per squared km
-#population_count_file = None
-population_count_file = "/home/lgervasoni/gpw-v4-population-count-adjusted-to-2015-unwpp-country-totals-2000/gpw-v4-population-count-adjusted-to-2015-unwpp-country-totals_2000.tif"
-
 # Default values
-city_name = "grenoble"
-point_shapefile = '/home/lgervasoni/Downloads/greno_shape/grenoble_france_osm_point.shp'
-polygon_shapefile = '/home/lgervasoni/Downloads/greno_shape/grenoble_france_osm_polygon.shp'
-prj_shapefile = '/home/lgervasoni/Downloads/greno_shape/grenoble_france_osm_point.prj'
+city_name = ""
+point_shapefile = ''
+polygon_shapefile = ''
+prj_shapefile = ''
 
 ####################################################################################
 ############# Name of files
@@ -50,7 +46,7 @@ citiesFolder = 'cities/'
 
 # Set input files
 def setInputFiles(city_country, popu_count_file = None, numberOfCuts = 4):
-	global fn_prefix, city_name, fn_residential_final, fn_activities_final, point_shapefile, polygon_shapefile, prj_shapefile, population_count_file, numCuts, fn_final_clasif, fn_residential, fn_activities, fn_joinResiActiv
+	global fn_prefix, city_name, fn_residential_final, fn_activities_final, point_shapefile, polygon_shapefile, prj_shapefile, numCuts, fn_final_clasif, fn_residential, fn_activities, fn_joinResiActiv
 	import os
 	if ((popu_count_file != None) and (not(os.path.isfile(popu_count_file)))):
 		popu_count_file = None
@@ -63,7 +59,6 @@ def setInputFiles(city_country, popu_count_file = None, numberOfCuts = 4):
 	point_shapefile = citiesFolder+city_country+'_osm_point.shp'
 	polygon_shapefile = citiesFolder+city_country+'_osm_polygon.shp'
 	prj_shapefile = citiesFolder+city_country+'_osm_point.prj'
-	population_count_file = popu_count_file
 	numCuts = numberOfCuts
 ####################################################################################
 ####################################################################################

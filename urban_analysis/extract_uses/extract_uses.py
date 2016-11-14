@@ -13,7 +13,6 @@ import poly_to_pts
 import classif_uses
 
 import cut_shapefile
-import population
 import mapzen
 
 
@@ -34,7 +33,7 @@ def clipFiles(point_shapefile, polygon_shapefile):
 	gc.collect()	
 	################################################################
 
-def performExtraction(point_shapefile, polygon_shapefile, population_count_file = None):
+def performExtraction(point_shapefile, polygon_shapefile):
 	""" Given OSM extracted shapefiles osm2pgsql (point,polygon) -> Extract residential/activities points
 	For each sub-shapefile: Extract point uses, polygon uses, infer polygon uses, convert all polygons to points
 	"""	
@@ -87,10 +86,6 @@ def performExtraction(point_shapefile, polygon_shapefile, population_count_file 
 	if (parameters.USE_Merge_categories):
 		cut_shapefile.mergeFinalCategories(parameters.fn_prefix,parameters.numCuts,parameters.deleteMergedParts)
 	########
-	### Process: Perform population down-scaling and distribute to each residential point
-	population.population_downscaling(population_count_file, parameters.fn_residential_final)
-	gc.collect()
-	########
 	if (parameters.USE_uniquePointsFile):
 		# Merge final activities and residential shapefile into one
 		removeSeparatedActivitiesResidential = True
@@ -111,25 +106,21 @@ def performExtraction(point_shapefile, polygon_shapefile, population_count_file 
 	################################################################
 
 ################################################################	
-def process(point_shapefile = None, polygon_shapefile = None, population_count_file = None):
+def process(point_shapefile = None, polygon_shapefile = None):
 	""" Process the point and polygon shapefile for the uses extraction from osm2pgsql file
 	1) Clips the file for an easier processing (lower memory usage, more efficient code performance)
 	2) Extract the point uses
 	3) Extract polygon uses, and convert to points (centroid)
 	4) Infer polygon uses (when there is not enough information), and convert to points (centroid)
-	5) Perform a population downscaling for residential points
 	"""
 	################################################################
 	'''
 	parameters.polygon_shapefile and parameters.point_shapefile must be set
-	If parameters.population_count_file is set, perform the population downscaling
 	'''
 	if (point_shapefile == None) :
 		point_shapefile = parameters.point_shapefile
 	if (polygon_shapefile == None) :
 		polygon_shapefile = parameters.polygon_shapefile
-	if (population_count_file == None):
-		population_count_file = parameters.population_count_file
 	################################################################
 	# Check if folder exists. In this case, assume it is already processed
 	if (os.path.isdir(parameters.fn_prefix) and os.path.isfile(parameters.fn_joinResiActiv+'.shp')):
@@ -143,8 +134,8 @@ def process(point_shapefile = None, polygon_shapefile = None, population_count_f
 	################################################################
 	################################################################
 
-	# Extract residential/activity uses. Alternatively, estimate the population count for residential points
-	performExtraction(point_shapefile, polygon_shapefile, population_count_file)
+	# Extract residential/activity uses.
+	performExtraction(point_shapefile, polygon_shapefile)
 
 	################################################################
 	################################################################
