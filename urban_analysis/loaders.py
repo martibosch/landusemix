@@ -102,6 +102,7 @@ def _load_data(city_ref, hdfs_keys, extra_method=None, extra_args=None):
             "A method and its arguments to obtain the data must then be provided"
         print("`%s` is/are not stored locally. Determining it/them through `%s` method" %
               (str(hdfs_keys), extra_method.__name__))
+        print(e)
         result = extra_method(*extra_args)
         with pd.HDFStore(_generate_file_path(city_ref), 'a') as store:
             print("Saving data for `%s` at `%s`" % (str(hdfs_keys), str(store._path)))

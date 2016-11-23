@@ -33,8 +33,7 @@ def processCompleteCity(city_ref, grid_step, alphas, bbox = None, fig_size = Non
     ''' KDE
     '''
     log_scale = False
-    #plots.plot_kdes(city, figsize=fig_size, zlim = True, fileSave = True, log_scale = False)
-    plots.plot_kdes(city, figsize=fig_size, zlim = True, fileSave = True, log_scale = False)
+    plots.plot_kdes(city, figsize=fig_size, zlim = True, fileSave = True, log_scale = log_scale)
 
     ''' LU MIX
     '''
