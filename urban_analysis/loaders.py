@@ -3,7 +3,6 @@ from six import string_types
 
 import pandas as pd
 
-from geo_graph import GeoGraph
 import kde
 import osm_loader
 import shp_loader
