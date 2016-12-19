@@ -85,6 +85,11 @@ def performExtraction(point_shapefile, polygon_shapefile):
 	### Merge the categories: Use only points
 	if (parameters.USE_Merge_categories):
 		cut_shapefile.mergeFinalCategories(parameters.fn_prefix,parameters.numCuts,parameters.deleteMergedParts)
+	
+	# Map to final activity and residential categories
+	classif_uses.performKeyCategoryValueSet(parameters.fn_activities_final+".shp", 'activity')
+	classif_uses.performKeyCategoryValueSet(parameters.fn_residential_final+".shp", 'residential')
+
 	########
 	if (parameters.USE_uniquePointsFile):
 		# Merge final activities and residential shapefile into one
@@ -97,12 +102,7 @@ def performExtraction(point_shapefile, polygon_shapefile):
 		shutil.rmtree(parameters.fn_subregions)
 	if (os.path.isfile(parameters.fn_prefix+'sample.prj') ):
 		os.remove(parameters.fn_prefix+'sample.prj')
-
 	###
-
-	# Map to final activity categories
-	classif_uses.performKeyCategoryMapping(parameters.fn_joinResiActiv, parameters.USE_multiActivitiesClassification)
-	################################################################
 	################################################################
 
 ################################################################	

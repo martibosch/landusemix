@@ -67,11 +67,6 @@ def keyCategoryMapping(pois_df, USE_multiActivitiesClassification):
 		####################
 		### Categories: commercial/industrial , leisure/amenity , shop
 		#######
-		'''TODO: If key is != {residential,shop,landuse,leisure,amenity,building,inferred} ?
-		For instance, 'total' happens when processing avila_spain (I think...)
-		By default, set what value? Activity?
-		'''
-
 
 		### Residential 
 		pois_df.loc[ (pois_df.key.isin(["residential"]) ) , 'category'] = 'residential'
@@ -131,6 +126,20 @@ def performKeyCategoryMapping(fn_result, USE_multiActivitiesClassification = Fal
 	# Save
 	shp_utils.toFile(fn_result, shapes, df_attrs, shapefile.POINT, reducedFields_category)
 
+def performKeyCategoryValueSet(fn_result, setValue):
+	""" Given the file (fn_result) containing points: Map {key,value} to the final category classification given input setValue category
+	"""
+	import shp_utils
+	import shapefile
+	### Read data-set
+	shapes , df_attrs = shp_utils.read_shp_dbf(fn_result)
+	# Perform the mapping to categories
+	df_attrs['category'] = setValue
+	# Add the category field
+	reducedFields_category = shp_utils.reducedFields + [['category','C',32,0]]
+	# Save
+	shp_utils.toFile(fn_result, shapes, df_attrs, shapefile.POINT, reducedFields_category)
+    
 ####################################################################################
 ### Roads:
 highway_important =  ["motor_way" , "trunk" , "primary" , "secondary", "tertiary", "residential", "unclassified", "service"]
