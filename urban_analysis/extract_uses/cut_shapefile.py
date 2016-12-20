@@ -75,10 +75,6 @@ def mergeFinalCategories(folder,numCuts,removeParts):
 	if ( folder[len(folder)-1] == "/"):
 		dirF = folder[:-1]
 
-	if (parameters.USE_verbose):
-		if ( (not(parameters.deleteParts)) or not(parameters.deletePolyToPts) ):
-			print('')
-
 	# Merge by activities and residential categories. Keep only points ?
 	# Assumes files with points are named "pts" and has the respective category name
 	toMergeActivities = []

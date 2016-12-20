@@ -51,7 +51,8 @@ def UnicodeToStr(x, thresholdLength = None):
 	if (thresholdLength != None):
 		if (thresholdLength < max_thresholdLength):
 			if (parameters.USE_verbose):
-				print('Be careful, threshold length smaller than: ',max_thresholdLength,x)
+				#print('Be careful, threshold length smaller than: ',max_thresholdLength,x)
+				pass
 			return 'VOID'
 	if isinstance(x, unicode):
 		# Decode to UTF8, then strip to remove white blank spaces at begining/end
@@ -75,7 +76,8 @@ def ByteToStr(x, thresholdLength = None):
 	if (thresholdLength != None):
 		if (thresholdLength < max_thresholdLength):
 			if (parameters.USE_verbose):
-				print('Be careful, threshold length smaller than: ',max_thresholdLength,x)
+				#print('Be careful, threshold length smaller than: ',max_thresholdLength,x)
+				pass
 			return 'VOID'
 	if isinstance(x, bytes):
 		# Decode to UTF8, then strip to remove white blank spaces at begining/end
