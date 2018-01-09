@@ -1,1 +1,1 @@
-Moved to https://gitlab.inria.fr/gervason/urbansprawl
+Moved to https://github.com/lgervasoni/urbansprawl
